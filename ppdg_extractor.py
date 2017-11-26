@@ -9,22 +9,35 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 
 import config
 
 # Fetch codes from DOM
 def fetch_codes(browser):
     # card store
-    card_store = browser.find_element_by_id("sub-hdr").find_element_by_class_name("print-focus").text
+    card_store = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[3]/section/div/div[1]/div/div/img").get_attribute("alt")
 
     # Get the card amount
-    card_amount = browser.find_element_by_class_name("egc-title-highlight").text
+    try:
+        browser.find_element_by_class_name("barcode")
+        card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[3]/section/div/div[1]/div/div/div[2]/dl[1]/dd").text.strip()
+        # Get the card number
+        card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[3]/section/div/div[1]/div/div/div[2]/dl[2]/dd").text.strip()
+        try:
+            card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[3]/section/div/div[1]/div/div/div[2]/dl[3]/dd").text.strip()
+        except NoSuchElementException:
+            card_pin = 0
+    except NoSuchElementException:
+        card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[3]/section/div/div[1]/div/div/div[1]/dl[1]/dd").text.strip()
+        # Get the card number
+        card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[3]/section/div/div[1]/div/div/div[1]/dl[2]/dd").text.strip()
+        try:
+            card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[3]/section/div/div[1]/div/div/div/dl[3]/dd").text.strip()
+        except NoSuchElementException:
+            card_pin = 0
 
-    # Get the card number
-    card_number = browser.find_element_by_id("barcode-num").text.split()[1].split(":")[1]
-    card_pin = browser.find_element_by_id("barcode-num").text.split()[3]
-
-    return card_store, card_amount, card_number, card_pin
+    return card_store, card_amount, card_code, card_pin
 
 
 # Connect to the server
@@ -38,7 +51,7 @@ mailbox.login(config.IMAP_USERNAME, config.IMAP_PASSWORD)
 mailbox.select(config.FOLDER)
 
 # Search for matching emails
-status, messages = mailbox.search(None, '(FROM {})'.format("ikeausgiftcards@cashstar.com"))
+status, messages = mailbox.search(None, '(FROM {})'.format("gifts@paypal.com"))
 if status == "OK":
     # Convert the result list to an array of message IDs
     messages = messages[0].split()
@@ -49,7 +62,7 @@ if status == "OK":
         exit()
 
     # Open the CSV for writing
-    with open('ikea_' + datetime.now().strftime('%m-%d-%Y_%H%M%S') + '.csv', 'w', newline='') as csv_file:
+    with open('ppdg_' + datetime.now().strftime('%m-%d-%Y_%H%M%S') + '.csv', 'w', newline='') as csv_file:
         # Start the browser and the CSV writer
         browser = webdriver.Chrome(config.CHROMEDRIVER_PATH)
         csv_writer = csv.writer(csv_file)
@@ -70,7 +83,7 @@ if status == "OK":
                 msg = email.message_from_bytes(data[0][1])
 
                 # Get the HTML body payload
-                msg_html = msg.get_payload(1).get_payload(decode=True)
+                msg_html = msg.get_payload(decode=True)
 
                 # Save the email timestamp
                 datetime_received = datetime.fromtimestamp(
@@ -80,21 +93,11 @@ if status == "OK":
                 msg_parsed = BeautifulSoup(msg_html, 'html.parser')
 
                 # Find the "View Gift" link
-                # for link in msg_parsed.find_all('a'):
-                #     print(link)
-                #     pass
 
-                egc_link = msg_parsed.find("a", text=re.compile("https://ikea-usa.cashstar.com/gift-card/view/"))
+                egc_link = msg_parsed.find("a", text="View My Code")
                 if egc_link is not None:
                     # Open the link in the browser
                     browser.get(egc_link['href'])
-                    emailaddr = browser.find_element_by_id("id_value")
-                    emailaddr.send_keys(config.IMAP_USERNAME)
-                    emailaddr.submit()
-                    wait = WebDriverWait(browser, 10)
-                    wait.until(EC.presence_of_element_located((By.ID, "skip")))
-                    skip = browser.find_element_by_id("skip")
-                    browser.get(skip.get_attribute("href"))
 
                     card_store, card_amount, card_number, card_pin = fetch_codes(browser)
 
