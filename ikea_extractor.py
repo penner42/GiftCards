@@ -2,13 +2,15 @@ import os
 import email
 import re
 import csv
-from datetime import datetime
+import sys
+from datetime import datetime, timedelta, date
 from imaplib import IMAP4, IMAP4_SSL
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 import config
 
@@ -37,8 +39,17 @@ else:
 mailbox.login(config.IMAP_USERNAME, config.IMAP_PASSWORD)
 mailbox.select(config.FOLDER)
 
+days = 0
+if len(sys.argv) > 1:
+    days = int(sys.argv[1])
+
 # Search for matching emails
-status, messages = mailbox.search(None, '(FROM {})'.format("ikeausgiftcards@cashstar.com"))
+if  days> 0:
+    since = (date.today() - timedelta(days-1)).strftime("%d-%b-%Y")
+    status, messages = mailbox.search(None, '(FROM {})'.format("ikeausgiftcards@cashstar.com") + ' SINCE ' + since)
+else:
+    status, messages = mailbox.search(None, '(FROM {})'.format("ikeausgiftcards@cashstar.com"))
+
 if status == "OK":
     # Convert the result list to an array of message IDs
     messages = messages[0].split()
@@ -85,13 +96,20 @@ if status == "OK":
                 #     pass
 
                 egc_link = msg_parsed.find("a", text=re.compile("https://ikea-usa.cashstar.com/gift-card/view/"))
+
                 if egc_link is not None:
                     # Open the link in the browser
                     browser.get(egc_link['href'])
                     emailaddr = browser.find_element_by_id("id_value")
                     emailaddr.send_keys(config.IMAP_USERNAME)
+                    wait = WebDriverWait(browser, 15)
+                    while emailaddr.get_attribute("value") != config.IMAP_USERNAME:
+                        try:
+                            wait.until(EC.text_to_be_present_in_element_value((By.ID, "id_value"), config.IMAP_USERNAME))
+                        except TimeoutException:
+                            emailaddr.send_keys(config.IMAP_USERNAME)
+
                     emailaddr.submit()
-                    wait = WebDriverWait(browser, 10)
                     wait.until(EC.presence_of_element_located((By.ID, "skip")))
                     skip = browser.find_element_by_id("skip")
                     browser.get(skip.get_attribute("href"))
@@ -115,7 +133,7 @@ if status == "OK":
                     browser.save_screenshot(os.path.join(screenshots_dir, card_number + '.png'))
 
                     # Write the details to the CSV
-                    csv_writer.writerow([card_amount, card_number, card_pin, card_store, datetime_received, egc_link['href']])
+                    csv_writer.writerow([card_number, card_pin, card_amount, card_store, datetime_received, egc_link['href']])
 
                     # Print out the details to the console
                     print("{}: {} {}, {}, {}".format(card_amount, card_number, card_pin, card_store, datetime_received))

@@ -7,4 +7,3 @@ IMAP_USERNAME = "you@gmail.com"
 IMAP_PASSWORD = ""
 
 FOLDER = "INBOX"
-FROM_EMAIL = "DoNotReply.Staples@blackhawk-net.com"
