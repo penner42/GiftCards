@@ -2,7 +2,8 @@ import os
 import email
 import re
 import csv
-from datetime import datetime
+import sys
+from datetime import datetime, timedelta, date
 from imaplib import IMAP4, IMAP4_SSL
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -51,7 +52,17 @@ mailbox.login(config.IMAP_USERNAME, config.IMAP_PASSWORD)
 mailbox.select(config.FOLDER)
 
 # Search for matching emails
-status, messages = mailbox.search(None, '(FROM {})'.format("gifts@paypal.com"))
+days = 0
+if len(sys.argv) > 1:
+    days = int(sys.argv[1])
+
+# Search for matching emails
+if  days> 0:
+    since = (date.today() - timedelta(days-1)).strftime("%d-%b-%Y")
+    status, messages = mailbox.search(None, '(FROM {})'.format("gifts@paypal.com") + ' SINCE ' + since)
+else:
+    status, messages = mailbox.search(None, '(FROM {})'.format("gifts@paypal.com"))
+
 if status == "OK":
     # Convert the result list to an array of message IDs
     messages = messages[0].split()
@@ -118,7 +129,7 @@ if status == "OK":
                     browser.save_screenshot(os.path.join(screenshots_dir, card_number + '.png'))
 
                     # Write the details to the CSV
-                    csv_writer.writerow([card_amount, card_number, card_pin, card_store, datetime_received, egc_link['href']])
+                    csv_writer.writerow([card_number, card_pin, card_amount, card_store, datetime_received, egc_link['href']])
 
                     # Print out the details to the console
                     print("{}: {} {}, {}, {}".format(card_amount, card_number, card_pin, card_store, datetime_received))

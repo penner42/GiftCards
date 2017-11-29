@@ -1,0 +1,52 @@
+#:kivy 1.0
+
+<InputWindow>:
+    BoxLayout:
+        orientation: 'vertical'
+        BoxLayout:
+            size_hint: 1,.08
+            size_hint_max_y: 30
+
+            orientation: 'horizontal'
+            TextInput:
+                id: pinfield
+                size_hint: .2, 1
+                size_hint_min_x: 20
+                multiline: False
+                focus: True
+                hint_text: "Type PIN here"
+                on_text_validate: root.pin_entered()
+            TextInput:
+                id: swipefield
+                size_hint: .4, 1
+                multiline: False
+                hint_text: "Swipe card here"
+                on_text_validate: root.card_swiped()
+
+        BoxLayout:
+            orientation: 'horizontal'
+
+            TextInput:
+                size_hint: .9,1
+                id: csv_output
+                readonly: True
+                hint_text: "Cards will show here."
+
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint: .1,1
+                size_hint_min_x: 50
+
+                Button:
+                    size_hint_max_y: 30
+                    id: copy
+                    text: "Copy"
+                    on_state: root.copy_output(self.state)
+
+                Button:
+                    size_hint_max_y: 30
+                    id: clear
+                    text: "Clear"
+                    on_state: root.clear_release(self.state)
+
+                Widget:
