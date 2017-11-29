@@ -9,19 +9,13 @@
 
             orientation: 'horizontal'
             TextInput:
-                id: pinfield
+                id: inputfield
                 size_hint: .2, 1
                 size_hint_min_x: 20
                 multiline: False
                 focus: True
-                hint_text: "Type PIN here"
-                on_text_validate: root.pin_entered()
-            TextInput:
-                id: swipefield
-                size_hint: .4, 1
-                multiline: False
-                hint_text: "Swipe card here"
-                on_text_validate: root.card_swiped()
+                hint_text: "Type PIN, then swipe card. If no PIN, just swipe."
+                on_text_validate: root.inputfield_entered()
 
         BoxLayout:
             orientation: 'horizontal'
