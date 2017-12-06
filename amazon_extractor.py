@@ -17,33 +17,16 @@ import config
 # Fetch codes from DOM
 def fetch_codes(browser):
     # card store
-    subdiv = 3
-    try:
-        browser.find_element_by_id("DM_categories")
-        subdiv = 4
-    except NoSuchElementException:
-        pass
-
-    card_store = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/img").get_attribute("alt")
+    card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
 
     # Get the card amount
+    card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+    # Get the card number
+    card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
     try:
-        browser.find_element_by_class_name("barcode")
-        card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/div[2]/dl[1]/dd").text.strip()
-        # Get the card number
-        card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/div[2]/dl[2]/dd").text.strip()
-        try:
-            card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/div[2]/dl[3]/dd").text.strip()
-        except NoSuchElementException:
-            card_pin = 0
+        card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
     except NoSuchElementException:
-        card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/div[1]/dl[1]/dd").text.strip()
-        # Get the card number
-        card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/div[1]/dl[2]/dd").text.strip()
-        try:
-            card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/div/dl[3]/dd").text.strip()
-        except NoSuchElementException:
-            card_pin = 0
+        card_pin = 0
 
     return card_store, card_amount, card_code, card_pin
 
@@ -66,9 +49,9 @@ if len(sys.argv) > 1:
 # Search for matching emails
 if  days> 0:
     since = (date.today() - timedelta(days-1)).strftime("%d-%b-%Y")
-    status, messages = mailbox.search(None, '(FROM {})'.format("gifts@paypal.com") + ' SINCE ' + since)
+    status, messages = mailbox.search(None, '(FROM {})'.format("gc-orders@gc.email.amazon.com") + ' SINCE ' + since)
 else:
-    status, messages = mailbox.search(None, '(FROM {})'.format("gifts@paypal.com"))
+    status, messages = mailbox.search(None, '(FROM {})'.format("gc-orders@gc.email.amazon.com"))
 
 if status == "OK":
     # Convert the result list to an array of message IDs
@@ -80,7 +63,7 @@ if status == "OK":
         exit()
 
     # Open the CSV for writing
-    with open('ppdg_' + datetime.now().strftime('%m-%d-%Y_%H%M%S') + '.csv', 'w', newline='') as csv_file:
+    with open('amazon_' + datetime.now().strftime('%m-%d-%Y_%H%M%S') + '.csv', 'w', newline='') as csv_file:
         # Start the browser and the CSV writer
         browser = webdriver.Chrome(config.CHROMEDRIVER_PATH)
         csv_writer = csv.writer(csv_file)
@@ -101,7 +84,7 @@ if status == "OK":
                 msg = email.message_from_bytes(data[0][1])
 
                 # Get the HTML body payload
-                msg_html = msg.get_payload(decode=True)
+                msg_html = msg.get_payload(1).get_payload(decode=True)
 
                 # Save the email timestamp
                 datetime_received = datetime.fromtimestamp(
@@ -112,10 +95,10 @@ if status == "OK":
 
                 # Find the "View Gift" link
 
-                egc_link = msg_parsed.find("a", text="View My Code")
+                egc_link = msg_parsed.find('img', alt='Get Gift Card')
                 if egc_link is not None:
                     # Open the link in the browser
-                    browser.get(egc_link['href'])
+                    browser.get(egc_link.parent['href'])
 
                     card_store, card_amount, card_number, card_pin = fetch_codes(browser)
 
@@ -136,7 +119,7 @@ if status == "OK":
                     browser.save_screenshot(os.path.join(screenshots_dir, card_number + '.png'))
 
                     # Write the details to the CSV
-                    csv_writer.writerow([card_number, card_pin, card_amount, card_store, datetime_received, egc_link['href']])
+                    csv_writer.writerow([card_number, card_pin, card_amount, card_store, datetime_received, egc_link.parent['href']])
 
                     # Print out the details to the console
                     print("{}: {} {}, {}, {}".format(card_amount, card_number, card_pin, card_store, datetime_received))
