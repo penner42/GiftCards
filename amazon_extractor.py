@@ -18,15 +18,27 @@ import config
 def fetch_codes(browser):
     # card store
     card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
+    if card_store == "":
+        card_store = browser.find_element_by_xpath('//*[@id="main"]/h1/strong').text.strip()
 
     # Get the card amount
-    card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+    try:
+        card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+    except NoSuchElementException:
+        card_amount = browser.find_element_by_id("amount").text.strip()
+
     # Get the card number
     card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
     try:
         card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
     except NoSuchElementException:
         card_pin = 0
+
+    if card_pin == card_code:
+        try:
+            card_pin = browser.find_element_by_xpath('//*[@id="claimCode"]').text.strip()
+        except NoSuchElementException:
+            pass
 
     return card_store, card_amount, card_code, card_pin
 
