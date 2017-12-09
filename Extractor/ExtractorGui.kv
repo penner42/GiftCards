@@ -6,14 +6,36 @@
             size_hint_max_y: 30
 
             orientation: 'horizontal'
-            TextInput:
-                id: inputfield
-                size_hint: .2, 1
-                size_hint_min_x: 20
-                multiline: False
-                focus: True
-                hint_text: "Type PIN, then swipe card. If no PIN, just swipe."
-                on_text_validate: root.inputfield_entered()
+            Label:
+                id: dropdown_label
+                text: "Card Source:"
+                size_hint_max_x: 100
+                height: 30
+                size_hint_y: None
+
+            Button:
+                id: btn
+                text: 'Select'
+                on_release: dropdown.open(self)
+                size_hint_max_x: 320
+                height: 90
+
+            DropDown:
+                id: dropdown
+                on_select: btn.text = '{}'.format(args[1])
+                size_hint_y: None
+
+                Button:
+                    text: 'Paypal Digital Gifts'
+                    on_release: dropdown.select('Paypal Digital Gifts')
+                    size_hint_y: None
+                    height: 30
+
+                Button:
+                    text: 'Samsung Pay'
+                    height: 30
+                    size_hint_y: None
+                    on_release: dropdown.select('Samsung Pay')
 
         BoxLayout:
             orientation: 'horizontal'

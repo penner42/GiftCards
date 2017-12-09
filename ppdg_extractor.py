@@ -36,6 +36,7 @@ def fetch_codes(browser):
             card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/div[2]/dl[3]/dd").text.strip()
         except NoSuchElementException:
             card_pin = 0
+            
     except NoSuchElementException:
         card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div["+str(subdiv)+"]/section/div/div[1]/div/div/div[1]/dl[1]/dd").text.strip()
         # Get the card number

@@ -20,13 +20,21 @@ def fetch_codes(browser):
     card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
 
     # Get the card amount
-    card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+    try:
+        card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+    except NoSuchElementException:
+        card_amount = browser.find_element_by_xpath('//*[@id="amount"]').text.strip()
+
     # Get the card number
-    card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
+    try:
+        card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
+    except NoSuchElementException:
+        card_code = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div/p/span').text.strip()
+
     try:
         card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
     except NoSuchElementException:
-        card_pin = 0
+        card_pin = ''
 
     return card_store, card_amount, card_code, card_pin
 

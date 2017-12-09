@@ -1,4 +1,7 @@
 from kivy.app import App
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.clipboard import Clipboard
@@ -73,8 +76,13 @@ class InputWindow(BoxLayout):
 
         self.dismiss_popup()
 
-class SwiperApp(App):
+class ExtractorGuiApp(App):
+    def build_config(self, config):
+        config.setdefaults('Email', {
+            'IMAP_HOST': 'imap.gmail.com',
+        })
+
     def build(self):
         return InputWindow()
 
-SwiperApp().run()
+ExtractorGuiApp().run()
