@@ -1,14 +1,31 @@
-from kivy.app import App
-from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.clipboard import Clipboard
 from kivy.properties import ObjectProperty
-from kivy.clock import Clock
 from kivy.uix.popup import Popup
+from kivy.uix.settings import SettingsWithTabbedPanel
+from kivy.uix.dropdown import DropDown
+from Extractor.extractors import extractors_list
+from kivy.uix.settings import SettingString
+from kivy.uix.label import Label
+from copy import deepcopy
 import os
+
+class PasswordLabel(Label):
+    pass
+
+class SettingPassword(SettingString):
+    def _create_popup(self, instance):
+        super(SettingPassword, self)._create_popup(instance)
+        self.textinput.password = True
+
+    def add_widget(self, widget, *largs):
+        if self.content is None:
+            super(SettingString, self).add_widget(widget, *largs)
+        if isinstance(widget, PasswordLabel):
+            return self.content.add_widget(widget, *largs)
 
 class SaveDialog(FloatLayout):
     save = ObjectProperty(None)
@@ -20,46 +37,13 @@ class SaveDialog(FloatLayout):
 
 class InputWindow(BoxLayout):
 
-    def focus_inputfield(self, dt):
-        self.ids.inputfield.focus = True
-
-    def inputfield_entered(self):
-        # card not swiped
-        if "%B" not in self.ids.inputfield.text:
-            Clock.schedule_once(self.focus_inputfield, -1)
-        else:
-            pin, data = self.ids.inputfield.text.split("%B")
-            self.card_swiped(pin, data)
-
-    def card_swiped(self, pin, data):
-        if data.count('?') != 2:
-            self.ids.inputfield.text = pin
-            Clock.schedule_once(self.focus_inputfield, -1)
-        else:
-            card_no = self.detect(data)
-            self.ids.csv_output.text += card_no + "," + pin + "\r\n"
-            self.ids.inputfield.text = ""
-            Clock.schedule_once(self.focus_inputfield, -1)
-
     def clear_release(self, value):
         if value == "normal":
             self.ids.csv_output.text = ""
-            Clock.schedule_once(self.focus_inputfield, -1)
 
     def copy_output(self, value):
         if value == "normal":
             Clipboard.copy(self.ids.csv_output.text)
-
-    def detect(self, data):
-        sec1, sec2, sec3 = data.split('^')
-        [t1,t2,t3] = [x.strip() for x in data.split('?')]
-
-        if (t1[-4:] == t2[-4:]) and (t1[-4:] != "0000"):
-            cardno = sec1[0]+sec3[14:16]+sec1[6:15]+sec3[16:20]
-        else:
-            cardno = sec1[0:20]
-
-        return ' '.join(cardno[i:i+4] for i in range(0,len(cardno), 4))
 
     def dismiss_popup(self):
         self._popup.dismiss()
@@ -76,13 +60,54 @@ class InputWindow(BoxLayout):
 
         self.dismiss_popup()
 
+    def extract_cards(self):
+        a = App.get_running_app()
+        config = a.config
+        extractor = None
+
+        e = [x for x in extractors_list if x.name() == a.window.ids.dropdownbtn.text]
+        if len(e) == 1:
+            extractor = e[0]()
+        else:
+            # TODO: show error about no card source selected
+            return
+
+        for section in ['Email1', 'Email2', 'Email3', 'Email4']:
+            if int(config.get(section, 'imap_active')) == 1:
+                pass
+
 class ExtractorGuiApp(App):
     def build_config(self, config):
-        config.setdefaults('Email', {
-            'IMAP_HOST': 'imap.gmail.com',
-        })
+        config.setdefaults('Settings', {'chromedriver_path': '', 'days': 1})
+        config.setdefaults('Email1', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
+        config.setdefaults('Email2', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
+        config.setdefaults('Email3', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
+        config.setdefaults('Email4', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
+
+    def build_settings(self, settings):
+        settings.register_type('password', SettingPassword)
+        settings.add_json_panel('Settings', self.config, 'ExtractorSettings.json')
+        settings.add_json_panel('Emails', self.config, 'ExtractorEmails.json')
 
     def build(self):
-        return InputWindow()
+        self.settings_cls = SettingsWithTabbedPanel
+        self.use_kivy_settings = False
+        window = InputWindow()
+        dropdown = DropDown()
+        for e in extractors_list:
+            btn = Button(text=e.name(), size_hint_y=None, height=30)
+            btn.bind(on_release=lambda dbtn: dropdown.select(dbtn.text))
+            dropdown.add_widget(btn)
+
+        window.ids.dropdownbtn.bind(on_release=dropdown.open)
+        dropdown.bind(on_select=lambda instance, x: setattr(window.ids.dropdownbtn, 'text', x))
+        self.window = window
+        self.dropdown = dropdown
+
+        return window
+
+    def on_config_change(self, config, section, key, value):
+        self.window.ids.dropdownbtn.bind(on_release=self.dropdown.open)
+        pass
 
 ExtractorGuiApp().run()

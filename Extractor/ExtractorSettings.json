@@ -1,0 +1,16 @@
+[
+    {
+        "type": "path",
+        "title": "Chrome Driver",
+        "desc": "Full path to chromedriver.exe executable",
+        "section": "Settings",
+        "key": "chromedriver_path"
+    },
+    {
+        "type": "numeric",
+        "title": "Days",
+        "desc": "Number of days to retrieve (1 = today)",
+        "section": "Settings",
+        "key": "days"
+    }
+]

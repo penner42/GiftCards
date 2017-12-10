@@ -1,0 +1,162 @@
+[
+  {
+    "type": "title",
+    "title": "Email 1"
+  },
+  {
+      "type": "bool",
+      "title": "Active",
+      "section": "Email1",
+      "key": "imap_active"
+  },
+  {
+      "type": "string",
+      "title": "Username",
+      "section": "Email1",
+      "key": "imap_username"
+  },
+  {
+      "type": "password",
+      "title": "Password",
+      "section": "Email1",
+      "key": "imap_password"
+  },
+  {
+      "type": "string",
+      "title": "Host",
+      "section": "Email1",
+      "key": "imap_host"
+  },
+  {
+      "type": "numeric",
+      "title": "Port",
+      "section": "Email1",
+      "key": "imap_port"
+  },
+  {
+      "type": "bool",
+      "title": "SSL",
+      "section": "Email1",
+      "key": "imap_ssl"
+  },
+  {
+    "type": "title",
+    "title": "Email 2"
+  },
+  {
+      "type": "bool",
+      "title": "Active",
+      "section": "Email2",
+      "key": "imap_active"
+  },
+  {
+      "type": "string",
+      "title": "Username",
+      "section": "Email2",
+      "key": "imap_username"
+  },
+  {
+      "type": "password",
+      "title": "Password",
+      "section": "Email2",
+      "key": "imap_password"
+  },
+  {
+      "type": "string",
+      "title": "Host",
+      "section": "Email2",
+      "key": "imap_host"
+  },
+  {
+      "type": "numeric",
+      "title": "Port",
+      "section": "Email2",
+      "key": "imap_port"
+  },
+  {
+      "type": "bool",
+      "title": "SSL",
+      "section": "Email2",
+      "key": "imap_ssl"
+  },
+  {
+    "type": "title",
+    "title": "Email 3"
+  },
+  {
+      "type": "bool",
+      "title": "Active",
+      "section": "Email3",
+      "key": "imap_active"
+  },
+  {
+      "type": "string",
+      "title": "Username",
+      "section": "Email3",
+      "key": "imap_username"
+  },
+  {
+      "type": "password",
+      "title": "Password",
+      "section": "Email3",
+      "key": "imap_password"
+  },
+  {
+      "type": "string",
+      "title": "Host",
+      "section": "Email3",
+      "key": "imap_host"
+  },
+  {
+      "type": "numeric",
+      "title": "Port",
+      "section": "Email3",
+      "key": "imap_port"
+  },
+  {
+      "type": "bool",
+      "title": "SSL",
+      "section": "Email3",
+      "key": "imap_ssl"
+  },
+  {
+    "type": "title",
+    "title": "Email 4"
+  },
+  {
+      "type": "bool",
+      "title": "Active",
+      "section": "Email4",
+      "key": "imap_active"
+  },
+  {
+      "type": "string",
+      "title": "Username",
+      "section": "Email4",
+      "key": "imap_username"
+  },
+  {
+      "type": "password",
+      "title": "Password",
+      "section": "Email4",
+      "key": "imap_password"
+  },
+  {
+      "type": "string",
+      "title": "Host",
+      "section": "Email4",
+      "key": "imap_host"
+  },
+  {
+      "type": "numeric",
+      "title": "Port",
+      "section": "Email4",
+      "key": "imap_port"
+  },
+  {
+      "type": "bool",
+      "title": "SSL",
+      "section": "Email4",
+      "key": "imap_ssl"
+  }
+]

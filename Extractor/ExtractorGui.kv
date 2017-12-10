@@ -14,28 +14,20 @@
                 size_hint_y: None
 
             Button:
-                id: btn
+                id: dropdownbtn
                 text: 'Select'
-                on_release: dropdown.open(self)
-                size_hint_max_x: 320
-                height: 90
 
-            DropDown:
-                id: dropdown
-                on_select: btn.text = '{}'.format(args[1])
-                size_hint_y: None
+            Button:
+                id: start
+                text: 'Extract!'
+                background_normal: ""
+                background_color: [0,0.5,0,1]
+                on_release: root.extract_cards()
+            Label:
 
-                Button:
-                    text: 'Paypal Digital Gifts'
-                    on_release: dropdown.select('Paypal Digital Gifts')
-                    size_hint_y: None
-                    height: 30
-
-                Button:
-                    text: 'Samsung Pay'
-                    height: 30
-                    size_hint_y: None
-                    on_release: dropdown.select('Samsung Pay')
+            Button:
+                text: 'Settings'
+                on_release: app.open_settings()
 
         BoxLayout:
             orientation: 'horizontal'
@@ -71,6 +63,12 @@
 
                 Widget:
 
+                Button:
+                    size_hint_max_y: 30
+                    id: save
+                    text: "Exit"
+                    on_release: exit()
+
 <SaveDialog>:
     text_input: text_input
     BoxLayout:
@@ -98,3 +96,9 @@
             Button:
                 text: "Save"
                 on_release: root.save(filechooser.path, text_input.text)
+
+<SettingPassword>:
+	PasswordLabel:
+		text: '**********' if root.value is not '' else '(unset)'
+		pos: root.pos
+		font_size: '15sp'

@@ -5,6 +5,13 @@ class Extractor:
         pass
 
 class PPDGExtractor(Extractor):
+    @staticmethod
+    def name():
+        return "PayPal Digital Gifts"
+
+    def fetch_url(self, data):
+        pass
+
     def fetch_codes(self, browser):
         # card store
         subdiv = 3
@@ -47,6 +54,10 @@ class PPDGExtractor(Extractor):
 
 
 class CashstarExtractor(Extractor):
+    @staticmethod
+    def name():
+        return "Cashstar"
+
     def fetch_codes(self, browser):
         def fetch_codes(browser):
             # card store
@@ -62,6 +73,10 @@ class CashstarExtractor(Extractor):
             return card_store, card_amount, card_number, card_pin
 
 class SamsungPayExtractor(Extractor):
+    @staticmethod
+    def name():
+        return "Samsung Pay"
+
     def fetch_codes(self, browser):
         # card store
         card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
@@ -86,6 +101,10 @@ class SamsungPayExtractor(Extractor):
         return card_store, card_amount, card_code, card_pin
 
 class AmazonExtractor(Extractor):
+    @staticmethod
+    def name():
+        return "Amazon"
+
     def fetch_codes(self, browser):
         def fetch_codes(browser):
             # card store
@@ -113,3 +132,6 @@ class AmazonExtractor(Extractor):
                     pass
 
             return card_store, card_amount, card_code, card_pin
+
+
+extractors_list = [AmazonExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor]
