@@ -12,5 +12,11 @@
         "desc": "Number of days to retrieve (1 = today)",
         "section": "Settings",
         "key": "days"
+    },
+    {
+        "type": "bool",
+        "title": "Hide Chrome Window",
+        "section": "Settings",
+        "key": "hide_chrome_window"
     }
 ]

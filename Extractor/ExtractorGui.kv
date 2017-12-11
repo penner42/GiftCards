@@ -6,28 +6,43 @@
             size_hint_max_y: 30
 
             orientation: 'horizontal'
-            Label:
-                id: dropdown_label
-                text: "Card Source:"
-                size_hint_max_x: 100
-                height: 30
-                size_hint_y: None
+#            Label:
+#                id: dropdown_label
+#                text: "Card Source:"
+#                size_hint_max_x: 100
+#                height: 30
+#                size_hint_y: None
 
             Button:
                 id: dropdownbtn
+                height: 30
                 text: 'Select'
 
             Button:
                 id: start
                 text: 'Extract!'
-                background_normal: ""
-                background_color: [0,0.5,0,1]
+#                background_normal: ""
+                background_color: [0,0.9,0,1]
                 on_release: root.extract_cards()
+
             Label:
 
             Button:
                 text: 'Settings'
                 on_release: app.open_settings()
+
+#        Label:
+#            id: progresslabel
+#            text: '[color=999999] Progress: [/color]'
+#            markup: True
+#            text_size: self.size
+#            halign: 'left'
+#            size_hint_max_y: 20
+#            size_hint_x: 1
+#
+#        ProgressBar:
+#            id: progressbar
+#            size_hint_max_y: 5
 
         BoxLayout:
             orientation: 'horizontal'
@@ -36,6 +51,7 @@
                 size_hint: .9,1
                 id: csv_output
                 readonly: True
+                multiline: False
                 hint_text: "Cards will show here."
 
             BoxLayout:

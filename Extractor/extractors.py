@@ -15,10 +15,11 @@ class PPDGExtractor(Extractor):
     def email(self):
         return "gifts@paypal.com"
 
-    def fetch_urls(self, mailbox, messages):
+    def fetch_urls(self, mailbox, messages, progress_callback):
         urls = []
         for msg_id in messages:
             print("---> Processing message id {}...".format(msg_id.decode('UTF-8')))
+            progress_callback("---> Processing message id {}...".format(msg_id.decode('UTF-8')), 0)
             # Fetch it from the server
             status, data = mailbox.fetch(msg_id, '(RFC822)')
             if status == "OK":
@@ -33,7 +34,7 @@ class PPDGExtractor(Extractor):
                 # Find the "View My Code" link
                 egc_link = msg_parsed.find("a", text="View My Code")
                 if egc_link is not None:
-                    urls.insert(0, [msg_id, datetime_received, egc_link])
+                    urls.insert(0, [msg_id, datetime_received, egc_link['href']])
 
         return urls
 
@@ -75,7 +76,7 @@ class PPDGExtractor(Extractor):
             except NoSuchElementException:
                 card_pin = 0
 
-        return card_store, card_amount, card_code, card_pin
+        return [card_store, card_amount, card_code, card_pin]
 
 
 class CashstarExtractor(Extractor):
@@ -98,7 +99,7 @@ class CashstarExtractor(Extractor):
             card_number = browser.find_element_by_id("barcode-num").text.split()[1].split(":")[1]
             card_pin = browser.find_element_by_id("barcode-num").text.split()[3]
 
-            return card_store, card_amount, card_number, card_pin
+            return [card_store, card_amount, card_number, card_pin]
 
 class SamsungPayExtractor(Extractor):
     @staticmethod
@@ -107,6 +108,29 @@ class SamsungPayExtractor(Extractor):
 
     def email(self):
         return "no-reply@samsungpay.com"
+
+    def fetch_urls(self, mailbox, messages, progress_callback):
+        urls = []
+        for msg_id in messages:
+            print("---> Processing message id {}...".format(msg_id.decode('UTF-8')))
+            progress_callback("---> Processing message id {}...".format(msg_id.decode('UTF-8')), 0)
+            # Fetch it from the server
+            status, data = mailbox.fetch(msg_id, '(RFC822)')
+            if status == "OK":
+                # Convert it to an Email object
+                msg = email.message_from_bytes(data[0][1])
+                # Get the HTML body payload
+                msg_html = msg.get_payload(1).get_payload(decode=True)
+                # Save the email timestamp
+                datetime_received = datetime.fromtimestamp(email.utils.mktime_tz(email.utils.parsedate_tz(msg.get('date'))))
+                # Parse the message
+                msg_parsed = BeautifulSoup(msg_html, 'html.parser')
+                # Find the "View My Code" link
+                egc_link = msg_parsed.find('img', src='http://giftcard-art.prod.looppay.com/redeem-button.png')
+                if egc_link is not None:
+                    urls.insert(0, [msg_id, datetime_received, egc_link.parent['href']])
+
+        return urls
 
     def fetch_codes(self, browser):
         # card store
@@ -129,7 +153,7 @@ class SamsungPayExtractor(Extractor):
         except NoSuchElementException:
             card_pin = ''
 
-        return card_store, card_amount, card_code, card_pin
+        return [card_store, card_amount, card_code, card_pin]
 
 class AmazonExtractor(Extractor):
     @staticmethod
@@ -165,7 +189,7 @@ class AmazonExtractor(Extractor):
                 except NoSuchElementException:
                     pass
 
-            return card_store, card_amount, card_code, card_pin
+            return [card_store, card_amount, card_code, card_pin]
 
 
 extractors_list = [AmazonExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor]
