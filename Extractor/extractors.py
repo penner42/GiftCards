@@ -1,4 +1,7 @@
 from selenium.common.exceptions import NoSuchElementException
+import email
+from bs4 import BeautifulSoup
+from datetime import datetime
 
 class Extractor:
     def extract(self):
@@ -9,8 +12,30 @@ class PPDGExtractor(Extractor):
     def name():
         return "PayPal Digital Gifts"
 
-    def fetch_url(self, data):
-        pass
+    def email(self):
+        return "gifts@paypal.com"
+
+    def fetch_urls(self, mailbox, messages):
+        urls = []
+        for msg_id in messages:
+            print("---> Processing message id {}...".format(msg_id.decode('UTF-8')))
+            # Fetch it from the server
+            status, data = mailbox.fetch(msg_id, '(RFC822)')
+            if status == "OK":
+                # Convert it to an Email object
+                msg = email.message_from_bytes(data[0][1])
+                # Get the HTML body payload
+                msg_html = msg.get_payload(decode=True)
+                # Save the email timestamp
+                datetime_received = datetime.fromtimestamp(email.utils.mktime_tz(email.utils.parsedate_tz(msg.get('date'))))
+                # Parse the message
+                msg_parsed = BeautifulSoup(msg_html, 'html.parser')
+                # Find the "View My Code" link
+                egc_link = msg_parsed.find("a", text="View My Code")
+                if egc_link is not None:
+                    urls.insert(0, [msg_id, datetime_received, egc_link])
+
+        return urls
 
     def fetch_codes(self, browser):
         # card store
@@ -58,6 +83,9 @@ class CashstarExtractor(Extractor):
     def name():
         return "Cashstar"
 
+    def email(self):
+        return "cashstar.com"
+
     def fetch_codes(self, browser):
         def fetch_codes(browser):
             # card store
@@ -76,6 +104,9 @@ class SamsungPayExtractor(Extractor):
     @staticmethod
     def name():
         return "Samsung Pay"
+
+    def email(self):
+        return "no-reply@samsungpay.com"
 
     def fetch_codes(self, browser):
         # card store
@@ -104,6 +135,9 @@ class AmazonExtractor(Extractor):
     @staticmethod
     def name():
         return "Amazon"
+
+    def email(self):
+        return "gc-orders@gc.email.amazon.com"
 
     def fetch_codes(self, browser):
         def fetch_codes(browser):

@@ -10,7 +10,8 @@ from kivy.uix.dropdown import DropDown
 from Extractor.extractors import extractors_list
 from kivy.uix.settings import SettingString
 from kivy.uix.label import Label
-from copy import deepcopy
+from imaplib import IMAP4, IMAP4_SSL
+from datetime import datetime, timedelta, date
 import os
 
 class PasswordLabel(Label):
@@ -71,10 +72,33 @@ class InputWindow(BoxLayout):
         else:
             # TODO: show error about no card source selected
             return
-
+        days = int(config.get('Settings', 'days'))
         for section in ['Email1', 'Email2', 'Email3', 'Email4']:
             if int(config.get(section, 'imap_active')) == 1:
-                pass
+                imap_ssl = int(config.get(section, 'imap_ssl')) == 1
+                imap_host = config.get(section, 'imap_host')
+                imap_port = int(config.get(section, 'imap_port'))
+                imap_username = config.get(section, 'imap_username')
+                imap_password = config.get(section, 'imap_password')
+                # Connect to the server
+                if imap_ssl:
+                    mailbox = IMAP4_SSL(host=imap_host, port=imap_port)
+                else:
+                    mailbox = IMAP4(host=imap_host, port=imap_port)
+
+                # Log in and select the configured folder
+                mailbox.login(imap_username, imap_password)
+                mailbox.select("INBOX")
+                since = (date.today() - timedelta(days - 1)).strftime("%d-%b-%Y")
+                status, messages = mailbox.search(None,'(FROM {})'.format(extractor.email()) + ' SINCE ' + since)
+                if status == "OK":
+                    # Convert the result list to an array of message IDs
+                    messages = messages[0].split()
+                    urls = extractor.fetch_urls(mailbox, messages)
+                    if len(urls) < 1:
+                        print("No matching messages found, nothing to do.")
+                        return
+
 
 class ExtractorGuiApp(App):
     def build_config(self, config):
