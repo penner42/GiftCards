@@ -14,7 +14,8 @@ from imaplib import IMAP4, IMAP4_SSL
 from datetime import datetime, timedelta, date
 from selenium import webdriver
 from kivy.clock import Clock, mainthread
-
+from bs4 import BeautifulSoup
+import email
 import threading
 
 import os
@@ -81,7 +82,7 @@ class InputWindow(BoxLayout):
         a = App.get_running_app()
         config = a.config
         extractor = None
-        cards = []
+        cards = {}
         urls = []
 
         e = [x for x in extractors_list if x.name() == a.window.ids.dropdownbtn.text]
@@ -113,10 +114,26 @@ class InputWindow(BoxLayout):
                 if status == "OK":
                     # Convert the result list to an array of message IDs
                     messages = messages[0].split()
-                    urls += extractor.fetch_urls(mailbox, messages, self.update_progress)
-
+                    for msg_id in messages:
+                        self.update_progress("---> Processing message id {}...".format(msg_id.decode('UTF-8')), 0)
+                        # Fetch it from the server
+                        status, data = mailbox.fetch(msg_id, '(RFC822)')
+                        if status == "OK":
+                            # Convert it to an Email object
+                            msg = email.message_from_bytes(data[0][1])
+                            # Get the HTML body payload
+                            msg_html = extractor.fetch_payload(msg)
+                            # Save the email timestamp
+                            datetime_received = datetime.fromtimestamp(
+                                email.utils.mktime_tz(email.utils.parsedate_tz(msg.get('date'))))
+                            # Parse the message
+                            msg_parsed = BeautifulSoup(msg_html, 'html.parser')
+                            # Find the "View My Code" link
+                            url = extractor.fetch_url(msg_parsed)
+                            if url is not None:
+                                urls.append([msg_id, datetime_received, url])
         if len(urls) < 1:
-            print("No matching messages found, nothing to do.")
+            self.popup.dismiss()
             return
 
         if browser is None:
@@ -130,12 +147,21 @@ class InputWindow(BoxLayout):
         for msg_id, datetime_received, url in urls:
             self.update_progress("Getting gift card from msg "+str(msg_id))
             browser.get(url)
-            cards.insert(0,extractor.fetch_codes(browser))
-            cards[0].insert(len(cards[0]), str(datetime_received))
-            cards[0].insert(len(cards[0]), url)
+            card = extractor.fetch_codes(browser)
+            if card['card_store'] not in cards:
+                cards[card['card_store']] = []
 
-        for c in cards:
-            self.ids.csv_output.text += "{},{},{},{},{},{}".format(c[2],c[3],c[1],c[0],c[4],c[5]) + "\r\n"
+            card['datetime_received'] = str(datetime_received)
+            card['url'] = url
+            cards[card['card_store']].append(card)
+
+        for store in cards:
+            self.ids.csv_output.text += store + "\r\n"
+            for c in cards[store]:
+                self.ids.csv_output.text += "{},{},{},{},{},{}".format(
+                    c['card_code'],c['card_pin'],c['card_amount'],c['card_store'],c['datetime_received'],c['url']) + "\r\n"
+            self.ids.csv_output.text += "\r\n"
+
         browser.close()
         self.popup.dismiss()
 
