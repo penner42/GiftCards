@@ -23,6 +23,11 @@ import os
 class PasswordLabel(Label):
     pass
 
+
+class ExtractDialog(BoxLayout):
+    pass
+
+
 class SettingPassword(SettingString):
     def _create_popup(self, instance):
         super(SettingPassword, self)._create_popup(instance)
@@ -69,12 +74,12 @@ class InputWindow(BoxLayout):
 
     @mainthread
     def update_progress(self, text, value=0):
-        self.popup.progresslabel.text = text
+        self.popup.children[0].children[0].children[0].children[0].children[0].text = text
 
     def extract_cards(self):
-        progresslabel = Label(id='progresslabel', text='extracting')
-        self.popup = Popup(title='extracting', content=progresslabel, size_hint=(.5,.5), auto_dismiss=False)
-        self.popup.progresslabel = progresslabel
+        extractdialog = ExtractDialog()
+        self.popup = Popup(title='extracting', content=extractdialog, size_hint=(.5,.5), auto_dismiss=False)
+        self.extractdialog = extractdialog
         self.popup.open()
         threading.Thread(target=self.extract_cards_real).start()
 
@@ -87,7 +92,7 @@ class InputWindow(BoxLayout):
 
         e = [x for x in extractors_list if x.name() == a.window.ids.dropdownbtn.text]
         if len(e) == 1:
-            extractor = e[0]()
+            extractor = e[0]
         else:
             # TODO: show error about no card source selected
             return
@@ -131,7 +136,11 @@ class InputWindow(BoxLayout):
                             # Find the "View My Code" link
                             url = extractor.fetch_url(msg_parsed)
                             if url is not None:
-                                urls.append([msg_id, datetime_received, url])
+                                if isinstance(url, list):
+                                    for u in url:
+                                        urls.append([msg_id, datetime_received, u])
+                                else:
+                                    urls.append([msg_id, datetime_received, url])
         if len(urls) < 1:
             self.popup.dismiss()
             return
@@ -143,6 +152,7 @@ class InputWindow(BoxLayout):
                 chrome_options.add_argument("--window-position=-10000,0")
 
             browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
+            self.extractdialog._browser = browser
 
         for msg_id, datetime_received, url in urls:
             self.update_progress("Getting gift card from msg "+str(msg_id))
@@ -163,6 +173,7 @@ class InputWindow(BoxLayout):
             self.ids.csv_output.text += "\r\n"
 
         browser.close()
+        self.extractdialog._browser = None
         self.popup.dismiss()
 
 class ExtractorGuiApp(App):

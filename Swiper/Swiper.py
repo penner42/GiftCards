@@ -51,7 +51,8 @@ class InputWindow(BoxLayout):
         sec1, sec2, sec3 = data.split('^')
         [t1,t2,t3] = [x.strip() for x in data.split('?')]
 
-        if (t1[-4:] == t2[-4:]) and (t1[-4:] != "0000"):
+        # if (t1[-4:] == t2[-4:]) and (t1[-4:] != "0000"):
+        if len(sec1) != 19:
             cardno = sec1[0]+sec3[14:16]+sec1[6:15]+sec3[16:20]
         else:
             cardno = sec1[0:20]

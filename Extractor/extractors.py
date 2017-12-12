@@ -1,30 +1,71 @@
 from selenium.common.exceptions import NoSuchElementException
-import email
-from bs4 import BeautifulSoup
-from datetime import datetime
+import re
 
 class Extractor:
     def extract(self):
         pass
+
+
+class NeweggExtractor(Extractor):
+    @staticmethod
+    def name():
+        return "Newegg"
+
+    @staticmethod
+    def email():
+        return "info@newegg.com"
+
+    @staticmethod
+    def fetch_payload(msg):
+        return msg.get_payload(decode=True)
+
+    @staticmethod
+    def fetch_url(msg_parsed):
+        egc_link = msg_parsed.findAll("a", text=re.compile('View and Print the card'))
+        urls = []
+        if len(egc_link) > 0:
+            for u in egc_link:
+                urls.insert(0, u['href'])
+            return urls
+
+    @staticmethod
+    def fetch_codes(browser):
+        # card store
+        card_store = browser.title.strip()
+
+        # Get the card amount
+        card_amount = browser.find_element_by_xpath('//*[@id="lblCertAmount"]').text.strip()
+        # Get the card number
+        card_code = browser.find_element_by_xpath('//*[@id="imgCertBarCode"]').get_attribute('src').split('CBID=')[1].split('&')[0]
+        try:
+            card_pin = browser.find_element_by_xpath('//*[@id="lblPin"]').text.strip()
+        except NoSuchElementException:
+            card_pin = ''
+
+        return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
 class PPDGExtractor(Extractor):
     @staticmethod
     def name():
         return "PayPal Digital Gifts"
 
-    def email(self):
+    @staticmethod
+    def email():
         return "gifts@paypal.com"
 
-    def fetch_payload(self, msg):
+    @staticmethod
+    def fetch_payload(msg):
         return msg.get_payload(decode=True)
 
-    def fetch_url(self, msg_parsed):
+    @staticmethod
+    def fetch_url(msg_parsed):
         egc_link = msg_parsed.find("a", text="View My Code")
         if egc_link is not None:
             # Open the link in the browser
             return egc_link['href']
 
-    def fetch_codes(self, browser):
+    @staticmethod
+    def fetch_codes(browser):
         # card store
         subdiv = 3
         try:
@@ -70,10 +111,12 @@ class CashstarExtractor(Extractor):
     def name():
         return "Cashstar"
 
-    def email(self):
+    @staticmethod
+    def email():
         return "cashstar.com"
 
-    def fetch_codes(self, browser):
+    @staticmethod
+    def fetch_codes(browser):
         def fetch_codes(browser):
             # card store
             card_store = browser.find_element_by_id("sub-hdr").find_element_by_class_name("print-focus").text
@@ -87,15 +130,18 @@ class CashstarExtractor(Extractor):
 
             return [card_store, card_amount, card_number, card_pin]
 
+
 class SamsungPayExtractor(Extractor):
     @staticmethod
     def name():
         return "Samsung Pay"
 
-    def email(self):
+    @staticmethod
+    def email():
         return "no-reply@samsungpay.com"
 
-    def fetch_payload(self, msg):
+    @staticmethod
+    def fetch_payload(msg):
         return msg.get_payload(1).get_payload(decode=True)
 
     def fetch_url(self, msg_parsed):
@@ -103,7 +149,8 @@ class SamsungPayExtractor(Extractor):
         if egc_link is not None:
             return egc_link.parent['href']
 
-    def fetch_codes(self, browser):
+    @staticmethod
+    def fetch_codes(browser):
         # card store
         card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
 
@@ -131,36 +178,47 @@ class AmazonExtractor(Extractor):
     def name():
         return "Amazon"
 
-    def email(self):
+    @staticmethod
+    def email():
         return "gc-orders@gc.email.amazon.com"
 
-    def fetch_codes(self, browser):
-        def fetch_codes(browser):
-            # card store
-            card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
-            if card_store == "":
-                card_store = browser.find_element_by_xpath('//*[@id="main"]/h1/strong').text.strip()
+    @staticmethod
+    def fetch_payload(msg):
+        return msg.get_payload(1).get_payload(decode=True)
 
-            # Get the card amount
+    @staticmethod
+    def fetch_url(msg_parsed):
+        egc_link = msg_parsed.find('img', alt='Get Gift Card')
+        if egc_link is not None:
+            return egc_link.parent['href']
+
+    @staticmethod
+    def fetch_codes(browser):
+        # card store
+        card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
+        if card_store == "":
+            card_store = browser.find_element_by_xpath('//*[@id="main"]/h1/strong').text.strip()
+
+        # Get the card amount
+        try:
+            card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+        except NoSuchElementException:
+            card_amount = browser.find_element_by_id("amount").text.strip()
+
+        # Get the card number
+        card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
+        try:
+            card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
+        except NoSuchElementException:
+            card_pin = 0
+
+        if card_pin == card_code:
             try:
-                card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+                card_pin = browser.find_element_by_xpath('//*[@id="claimCode"]').text.strip()
             except NoSuchElementException:
-                card_amount = browser.find_element_by_id("amount").text.strip()
+                pass
 
-            # Get the card number
-            card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
-            try:
-                card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
-            except NoSuchElementException:
-                card_pin = 0
-
-            if card_pin == card_code:
-                try:
-                    card_pin = browser.find_element_by_xpath('//*[@id="claimCode"]').text.strip()
-                except NoSuchElementException:
-                    pass
-
-            return [card_store, card_amount, card_code, card_pin]
+        return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
 
-extractors_list = [AmazonExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor]
+extractors_list = [AmazonExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor, NeweggExtractor]

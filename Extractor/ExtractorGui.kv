@@ -113,8 +113,23 @@
                 text: "Save"
                 on_release: root.save(filechooser.path, text_input.text)
 
+<ExtractDialog>
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            id: progresslabel
+            text: 'Extracting'
+
+
 <SettingPassword>:
 	PasswordLabel:
 		text: '**********' if root.value is not '' else '(unset)'
-		pos: root.pos
-		font_size: '15sp'
+	    height: 60
+#		pos: root.pos
+#		font_size: '15sp'
+
+#<-SettingBoolean>
+#    CheckBox:
+#        pos: root.pos
+#        active: bool(root.values.index(root.value)) if root.value in root.values else False
+#        on_active: root.value = root.values[int(args[1])]
