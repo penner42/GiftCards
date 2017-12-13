@@ -7,18 +7,19 @@ from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 from kivy.uix.settings import SettingsWithTabbedPanel
 from kivy.uix.dropdown import DropDown
-from Extractor.extractors import extractors_list
 from kivy.uix.settings import SettingString
 from kivy.uix.label import Label
 from imaplib import IMAP4, IMAP4_SSL
 from datetime import datetime, timedelta, date
 from selenium import webdriver
 from kivy.clock import Clock, mainthread
+from kivy.resources import resource_add_path
+from kivy.lang import Builder
 from bs4 import BeautifulSoup
 import email
 import threading
-
-import os
+import os, sys
+from Extractor.extractors import *
 
 class PasswordLabel(Label):
     pass
@@ -72,6 +73,9 @@ class InputWindow(BoxLayout):
 
         self.dismiss_popup()
 
+    def exit(self):
+        sys.exit()
+
     @mainthread
     def update_progress(self, text, value=0):
         self.popup.children[0].children[0].children[0].children[0].children[0].text = text
@@ -115,7 +119,7 @@ class InputWindow(BoxLayout):
                 mailbox.login(imap_username, imap_password)
                 mailbox.select("INBOX")
                 since = (date.today() - timedelta(days - 1)).strftime("%d-%b-%Y")
-                status, messages = mailbox.search(None,'(FROM {})'.format(extractor.email()) + ' SINCE ' + since)
+                status, messages = mailbox.search(None,'(FROM {} SINCE {})'.format(extractor.email(), since))
                 if status == "OK":
                     # Convert the result list to an array of message IDs
                     messages = messages[0].split()
@@ -184,10 +188,23 @@ class ExtractorGuiApp(App):
         config.setdefaults('Email3', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
         config.setdefaults('Email4', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
 
+    def resource_path(self, relative_path=None):
+        """ Get absolute path to resource, works for dev and for PyInstaller """
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        if relative_path:
+            return os.path.join(base_path, relative_path)
+        else:
+            return base_path
+
     def build_settings(self, settings):
         settings.register_type('password', SettingPassword)
-        settings.add_json_panel('Settings', self.config, 'ExtractorSettings.json')
-        settings.add_json_panel('Emails', self.config, 'ExtractorEmails.json')
+        settings.add_json_panel('Settings', self.config, self.resource_path('ExtractorSettings.json'))
+        settings.add_json_panel('Emails', self.config, self.resource_path('ExtractorEmails.json'))
 
     def dropdown_selected(self, text):
         self.window.ids.dropdownbtn.text = text
@@ -195,6 +212,10 @@ class ExtractorGuiApp(App):
         self.config.write()
 
     def build(self):
+        resource_add_path(self.resource_path())
+        # load .kv file if in PyInstaller
+        if hasattr(sys, '_MEIPASS'):
+            Builder.load_file('ExtractorGui.kv')
         self.settings_cls = SettingsWithTabbedPanel
         self.use_kivy_settings = False
         window = InputWindow()
@@ -210,7 +231,6 @@ class ExtractorGuiApp(App):
 
         self.window = window
         self.dropdown = dropdown
-
         return window
 
     def on_config_change(self, config, section, key, value):
@@ -218,4 +238,5 @@ class ExtractorGuiApp(App):
         pass
 
 
-ExtractorGuiApp().run()
+if __name__ == "__main__":
+    ExtractorGuiApp().run()
