@@ -15,6 +15,12 @@
     },
     {
         "type": "bool",
+        "title": "Screenshots",
+        "section": "Settings",
+        "key": "screenshots"
+    },
+    {
+        "type": "bool",
         "title": "Hide Chrome Window",
         "section": "Settings",
         "key": "hide_chrome_window"

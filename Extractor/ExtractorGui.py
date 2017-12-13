@@ -87,6 +87,18 @@ class InputWindow(BoxLayout):
         self.popup.open()
         threading.Thread(target=self.extract_cards_real).start()
 
+    def save_file(self):
+        filename = "test.txt"
+        with open(filename, "w") as text_file:
+            text_file.write(self.ids.csv_output.text)
+
+    def save_screenshot(self, browser, card_number):
+        screenshots_dir = os.path.join(os.getcwd(), 'screenshots')
+        if not os.path.exists(screenshots_dir):
+            os.makedirs(screenshots_dir)
+
+        browser.save_screenshot(os.path.join(screenshots_dir, card_number + '.png'))
+
     def extract_cards_real(self):
         a = App.get_running_app()
         config = a.config
@@ -168,12 +180,14 @@ class InputWindow(BoxLayout):
             card['datetime_received'] = str(datetime_received)
             card['url'] = url
             cards[card['card_store']].append(card)
+            if int(config.get('Settings', 'screenshots')) == 1:
+                self.save_screenshot(browser, card['card_code'])
 
         for store in cards:
             self.ids.csv_output.text += store + "\r\n"
             for c in cards[store]:
                 self.ids.csv_output.text += "{},{},{},{},{},{}".format(
-                    c['card_code'],c['card_pin'],c['card_amount'],c['card_store'],c['datetime_received'],c['url']) + "\r\n"
+                    c['card_code'],c['card_pin'],c['card_amount'],c['card_store'],c['datetime_received'],c['url'])+"\r\n"
             self.ids.csv_output.text += "\r\n"
 
         browser.close()
@@ -182,7 +196,7 @@ class InputWindow(BoxLayout):
 
 class ExtractorGuiApp(App):
     def build_config(self, config):
-        config.setdefaults('Settings', {'chromedriver_path': '', 'days': 1, 'selected_source': 'Paypal Digital Gifts', 'hide_chrome_window': 1})
+        config.setdefaults('Settings', {'chromedriver_path': '', 'days': 1, 'selected_source': 'Paypal Digital Gifts', 'hide_chrome_window': 1, 'screenshots': 0})
         config.setdefaults('Email1', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
         config.setdefaults('Email2', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
         config.setdefaults('Email3', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})

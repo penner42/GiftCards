@@ -52,6 +52,8 @@
                 id: csv_output
                 readonly: True
                 multiline: False
+                allow_copy: True
+                copydata: self.text
                 hint_text: "Cards will show here."
 
             BoxLayout:
@@ -75,7 +77,7 @@
                     size_hint_max_y: 30
                     id: save
                     text: "Save"
-                    on_release: root.show_save()
+                    on_release: root.save_file()
 
                 Widget:
 
