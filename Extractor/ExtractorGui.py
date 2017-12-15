@@ -150,13 +150,14 @@ class InputWindow(BoxLayout):
                             # Parse the message
                             msg_parsed = BeautifulSoup(msg_html, 'html.parser')
                             # Find the "View My Code" link
-                            url = extractor.fetch_url(msg_parsed)
+                            url = extractor.fetch_url(msg_parsed, browser, imap_username)
+
                             if url is not None:
                                 if isinstance(url, list):
                                     for u in url:
-                                        urls.append([msg_id, datetime_received, u])
+                                        urls.append([msg_id, datetime_received, u, imap_username])
                                 else:
-                                    urls.append([msg_id, datetime_received, url])
+                                    urls.append([msg_id, datetime_received, url, imap_username])
         if len(urls) < 1:
             self.popup.dismiss()
             return
@@ -170,18 +171,30 @@ class InputWindow(BoxLayout):
             browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
             self.extractdialog._browser = browser
 
-        for msg_id, datetime_received, url in urls:
+        for msg_id, datetime_received, url, imap_username in urls:
             self.update_progress("Getting gift card from msg "+str(msg_id))
-            browser.get(url)
-            card = extractor.fetch_codes(browser)
-            if card['card_store'] not in cards:
-                cards[card['card_store']] = []
+            # repeat until code isn't empty?
+            while True:
+                browser.get(url)
+                # challenege for Cashstar cards (and others?)
+                extractor.complete_challenge(browser, imap_username)
+                card = extractor.fetch_codes(browser)
 
-            card['datetime_received'] = str(datetime_received)
-            card['url'] = url
-            cards[card['card_store']].append(card)
-            if int(config.get('Settings', 'screenshots')) == 1:
-                self.save_screenshot(browser, card['card_code'])
+                if card is None:
+                    break
+
+                if card['card_store'] not in cards:
+                    cards[card['card_store']] = []
+
+                if card['card_code'] != '':
+                    break
+
+            if card is not None:
+                card['datetime_received'] = str(datetime_received)
+                card['url'] = url
+                cards[card['card_store']].append(card)
+                if int(config.get('Settings', 'screenshots')) == 1:
+                    self.save_screenshot(browser, card['card_code'])
 
         for store in cards:
             self.ids.csv_output.text += store + "\r\n"
