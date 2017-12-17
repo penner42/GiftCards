@@ -169,16 +169,16 @@ class CashstarExtractor(Extractor):
         except NoSuchElementException:
             pass
 
-        # card store
-        card_store = browser.find_element_by_id("sub-hdr").find_element_by_class_name("print-focus").text
+        a = ''
+        try:
+            print(browser.find_element_by_xpath('//h1[contains(text(), "Here is your")]').text)
+        except NoSuchElementException:
+            pass
 
-        # Get the card amount
-        card_amount = browser.find_element_by_class_name("egc-title-highlight").text
-
-        # Get the card number
-        card_number = browser.find_element_by_id("barcode-num").text.split()[1].split(":")[1]
-        card_pin = browser.find_element_by_id("barcode-num").text.split()[3]
-
+        card_store = ''
+        card_amount = ''
+        card_code = 'a'
+        card_pin = ''
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
 

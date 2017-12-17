@@ -266,4 +266,6 @@ class ExtractorGuiApp(App):
 
 
 if __name__ == "__main__":
+    file_dir = os.path.dirname(__file__)
+    sys.path.append(file_dir)
     ExtractorGuiApp().run()
