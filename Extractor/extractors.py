@@ -103,7 +103,7 @@ class PPDGExtractor(Extractor):
                 card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
                     subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[3]/dd").text.strip()
             except NoSuchElementException:
-                card_pin = 0
+                card_pin = ''
 
         except NoSuchElementException:
             card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
@@ -115,7 +115,7 @@ class PPDGExtractor(Extractor):
                 card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
                     subdiv) + "]/section/div/div[1]/div/div/div/dl[3]/dd").text.strip()
             except NoSuchElementException:
-                card_pin = 0
+                card_pin = ''
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
@@ -262,7 +262,7 @@ class AmazonExtractor(Extractor):
         try:
             card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
         except NoSuchElementException:
-            card_pin = 0
+            card_pin = ''
 
         if card_pin == card_code:
             try:

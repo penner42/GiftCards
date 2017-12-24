@@ -19,7 +19,7 @@ from bs4 import BeautifulSoup
 import email
 import threading
 import os, sys
-from Extractor.extractors import *
+from extractors import *
 
 class PasswordLabel(Label):
     pass
@@ -197,6 +197,8 @@ class InputWindow(BoxLayout):
                     self.save_screenshot(browser, card['card_code'])
 
         for store in cards:
+            # sort by time received
+            cards[store] = sorted(cards[store], key=lambda k: k['datetime_received'])
             self.ids.csv_output.text += store + "\r\n"
             for c in cards[store]:
                 self.ids.csv_output.text += "{},{},{},{},{},{}".format(
@@ -207,7 +209,7 @@ class InputWindow(BoxLayout):
         self.extractdialog._browser = None
         self.popup.dismiss()
 
-class ExtractorGuiApp(App):
+class ExtractorApp(App):
     def build_config(self, config):
         config.setdefaults('Settings', {'chromedriver_path': '', 'days': 1, 'selected_source': 'Paypal Digital Gifts', 'hide_chrome_window': 1, 'screenshots': 0})
         config.setdefaults('Email1', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
@@ -242,7 +244,7 @@ class ExtractorGuiApp(App):
         resource_add_path(self.resource_path())
         # load .kv file if in PyInstaller
         if hasattr(sys, '_MEIPASS'):
-            Builder.load_file('ExtractorGui.kv')
+            Builder.load_file('Extractor.kv')
         self.settings_cls = SettingsWithTabbedPanel
         self.use_kivy_settings = False
         window = InputWindow()
@@ -268,4 +270,4 @@ class ExtractorGuiApp(App):
 if __name__ == "__main__":
     file_dir = os.path.dirname(__file__)
     sys.path.append(file_dir)
-    ExtractorGuiApp().run()
+    ExtractorApp().run()
