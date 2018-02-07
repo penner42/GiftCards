@@ -1,5 +1,5 @@
 from selenium.common.exceptions import NoSuchElementException
-import re
+import re, json
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -80,6 +80,7 @@ class PPDGExtractor(Extractor):
 
     @staticmethod
     def fetch_codes(browser):
+        found_codes = False
         # card store
         subdiv = 3
         try:
@@ -88,34 +89,43 @@ class PPDGExtractor(Extractor):
         except NoSuchElementException:
             pass
 
-        card_store = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-            subdiv) + "]/section/div/div[1]/div/div/img").get_attribute("alt")
+        try:
+            card_store = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
+                subdiv) + "]/section/div/div[1]/div/div/img").get_attribute("alt")
+        except NoSuchElementException:
+            script_json = json.loads(browser.find_element_by_id('react-engine-props').get_attribute('innerHTML'))
+            card_store = script_json['cardDetails']['description']
+            card_amount = script_json['cardDetails']['itemValue']
+            card_code = script_json['cardDetails']['giftCard']['card_number']
+            card_pin = script_json['cardDetails']['giftCard']['security_code']
+            found_codes = True
 
         # Get the card amount
-        try:
-            browser.find_element_by_class_name("barcode")
-            card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-                subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[1]/dd").text.strip()
-            # Get the card number
-            card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-                subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[2]/dd").text.strip()
+        if found_codes is False:
             try:
-                card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-                    subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[3]/dd").text.strip()
-            except NoSuchElementException:
-                card_pin = ''
+                browser.find_element_by_class_name("barcode")
+                card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
+                    subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[1]/dd").text.strip()
+                # Get the card number
+                card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
+                    subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[2]/dd").text.strip()
+                try:
+                    card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
+                        subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[3]/dd").text.strip()
+                except NoSuchElementException:
+                    card_pin = ''
 
-        except NoSuchElementException:
-            card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-                subdiv) + "]/section/div/div[1]/div/div/div[1]/dl[1]/dd").text.strip()
-            # Get the card number
-            card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-                subdiv) + "]/section/div/div[1]/div/div/div[1]/dl[2]/dd").text.strip()
-            try:
-                card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-                    subdiv) + "]/section/div/div[1]/div/div/div/dl[3]/dd").text.strip()
             except NoSuchElementException:
-                card_pin = ''
+                card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
+                    subdiv) + "]/section/div/div[1]/div/div/div[1]/dl[1]/dd").text.strip()
+                # Get the card number
+                card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
+                    subdiv) + "]/section/div/div[1]/div/div/div[1]/dl[2]/dd").text.strip()
+                try:
+                    card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
+                        subdiv) + "]/section/div/div[1]/div/div/div/dl[3]/dd").text.strip()
+                except NoSuchElementException:
+                    card_pin = ''
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
