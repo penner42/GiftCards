@@ -7,8 +7,12 @@ from selenium.webdriver.common.by import By
 
 class Extractor:
     @staticmethod
-    def complete_challenge(browser, email):
+    def complete_challenge(browser, email, phonenum):
         return None
+
+    @staticmethod
+    def subject():
+        return ""
 
 class NeweggExtractor(Extractor):
     @staticmethod
@@ -154,7 +158,7 @@ class CashstarExtractor(Extractor):
             return egc_link['href']
 
     @staticmethod
-    def complete_challenge(browser, email):
+    def complete_challenge(browser, email, phonenum):
         try:
             browser.find_element_by_id("error-page")
             return None
@@ -302,6 +306,9 @@ class GiftCardMallExtractor(Extractor):
     @staticmethod
     def fetch_url(msg_parsed, browser, email):
         egc_link = msg_parsed.findAll("a", {"class": "email-btn-link"})
+        if len(egc_link) == 0:
+            egc_link = msg_parsed.findAll("a", text=re.compile("Click to View"))
+
         urls = []
         if len(egc_link) > 0:
             for u in egc_link:
@@ -323,4 +330,62 @@ class GiftCardMallExtractor(Extractor):
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
-extractors_list = [AmazonExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor, NeweggExtractor, GiftCardMallExtractor]
+class BestBuyExtractor(Extractor):
+    @staticmethod
+    def name():
+        return "Best Buy"
+
+    @staticmethod
+    def complete_challenge(browser, email, phonenum):
+        try:
+            browser.find_element_by_id('phoneNumberChallenge')
+        except NoSuchElementException:
+            return None
+
+        phone = browser.find_element_by_name('phone')
+        phone_dashed = phonenum[0:3]+"-"+phonenum[3:6]+"-"+phonenum[6:10]
+        phone.send_keys(phonenum)
+        wait = WebDriverWait(browser, 15)
+        while phone.get_attribute("value") != phone_dashed:
+            try:
+                wait.until(EC.text_to_be_present_in_element_value((By.NAME, "phone"), phone_dashed))
+            except TimeoutException:
+                phone.send_keys(phonenum)
+        phone.submit()
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "gift-card-container")))
+
+    @staticmethod
+    def email():
+        return "BestBuyInfo@emailinfo.bestbuy.com"
+
+    @staticmethod
+    def subject():
+        return "E-Gift Card"
+
+    @staticmethod
+    def fetch_payload(msg):
+        return msg.get_payload(decode=True)
+
+    @staticmethod
+    def fetch_url(msg_parsed, browser, email):
+        egc_link = msg_parsed.findAll('a', text=re.compile('Claim my e-gift card'))
+        if len(egc_link) == 0:
+            egc_link = msg_parsed.findAll("a", text=re.compile("Click to View"))
+
+        urls = []
+        if len(egc_link) > 0:
+            for u in egc_link:
+                urls.insert(0, u['href'])
+            return urls
+
+    @staticmethod
+    def fetch_codes(browser):
+        # card store
+        card_store = 'Best Buy'
+        card_code = browser.find_element_by_xpath('//*[@id="app"]/div/div/div[4]/div[2]/div[1]/p').text.strip()
+        card_pin = browser.find_element_by_xpath('//*[@id="app"]/div/div/div[4]/div[2]/div[2]/p').text.strip()
+        card_amount = browser.find_element_by_xpath('//*[@id="app"]/div/div/div[4]/div[2]/div[3]/div').text.split(" ")[0].strip()
+
+        return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
+
+extractors_list = [AmazonExtractor, BestBuyExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor, NeweggExtractor, GiftCardMallExtractor]

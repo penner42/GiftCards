@@ -34,6 +34,13 @@
       "key": "imap_port"
   },
   {
+      "type": "string",
+      "title": "Phone",
+      "section": "Email1",
+      "key": "phonenum"
+
+  },
+  {
       "type": "bool",
       "title": "SSL",
       "section": "Email1",
@@ -72,6 +79,13 @@
       "title": "Port",
       "section": "Email2",
       "key": "imap_port"
+  },
+  {
+      "type": "string",
+      "title": "Phone",
+      "section": "Email2",
+      "key": "phonenum"
+
   },
   {
       "type": "bool",
@@ -114,6 +128,13 @@
       "key": "imap_port"
   },
   {
+      "type": "string",
+      "title": "Phone",
+      "section": "Email3",
+      "key": "phonenum"
+
+  },
+  {
       "type": "bool",
       "title": "SSL",
       "section": "Email3",
@@ -152,6 +173,13 @@
       "title": "Port",
       "section": "Email4",
       "key": "imap_port"
+  },
+  {
+      "type": "string",
+      "title": "Phone",
+      "section": "Email4",
+      "key": "phonenum"
+
   },
   {
       "type": "bool",

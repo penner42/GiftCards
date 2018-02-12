@@ -121,6 +121,8 @@ class InputWindow(BoxLayout):
                 imap_port = int(config.get(section, 'imap_port'))
                 imap_username = config.get(section, 'imap_username')
                 imap_password = config.get(section, 'imap_password')
+                phonenum = config.get(section, 'phonenum')
+
                 # Connect to the server
                 if imap_ssl:
                     mailbox = IMAP4_SSL(host=imap_host, port=imap_port)
@@ -131,7 +133,11 @@ class InputWindow(BoxLayout):
                 mailbox.login(imap_username, imap_password)
                 mailbox.select("INBOX")
                 since = (date.today() - timedelta(days - 1)).strftime("%d-%b-%Y")
-                status, messages = mailbox.search(None,'(FROM {} SINCE {})'.format(extractor.email(), since))
+                subject = ' HEADER Subject "'+extractor.subject()+'" ' if extractor.subject() is not "" else " "
+                status, messages = mailbox.search(None,'(FROM {}{}SINCE "{}")'.format(extractor.email(),
+                                                                               subject,
+                                                                               since))
+
                 if status == "OK":
                     # Convert the result list to an array of message IDs
                     messages = messages[0].split()
@@ -177,7 +183,7 @@ class InputWindow(BoxLayout):
             while True:
                 browser.get(url)
                 # challenege for Cashstar cards (and others?)
-                extractor.complete_challenge(browser, imap_username)
+                extractor.complete_challenge(browser, imap_username, phonenum)
                 card = extractor.fetch_codes(browser)
 
                 if card is None:
@@ -212,10 +218,10 @@ class InputWindow(BoxLayout):
 class ExtractorApp(App):
     def build_config(self, config):
         config.setdefaults('Settings', {'chromedriver_path': '', 'days': 1, 'selected_source': 'Paypal Digital Gifts', 'hide_chrome_window': 1, 'screenshots': 0})
-        config.setdefaults('Email1', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
-        config.setdefaults('Email2', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
-        config.setdefaults('Email3', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
-        config.setdefaults('Email4', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': ''})
+        config.setdefaults('Email1', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        config.setdefaults('Email2', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        config.setdefaults('Email3', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        config.setdefaults('Email4', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
 
     def resource_path(self, relative_path=None):
         """ Get absolute path to resource, works for dev and for PyInstaller """
