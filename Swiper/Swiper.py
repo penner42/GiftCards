@@ -2,6 +2,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.clipboard import Clipboard
+from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelHeader
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from kivy.uix.popup import Popup
@@ -15,8 +16,10 @@ class SaveDialog(FloatLayout):
     def get_path(self):
         return os.path.expanduser("~")
 
-class InputWindow(BoxLayout):
+class InputWindow(TabbedPanel):
+    pass
 
+class Swipe(BoxLayout):
     def focus_inputfield(self, dt):
         self.ids.inputfield.focus = True
 
@@ -74,8 +77,51 @@ class InputWindow(BoxLayout):
 
         self.dismiss_popup()
 
+class Barcode(BoxLayout):
+    def focus_pin_inputfield(self, dt):
+        self.ids.pin_inputfield.focus = True
+
+    def focus_code_inputfield(self, dt):
+        self.ids.code_inputfield.focus = True
+
+    def pin_inputfield_entered(self):
+        Clock.schedule_once(self.focus_code_inputfield, -1)
+
+    def code_inputfield_entered(self):
+        code = self.ids.code_inputfield.text
+        # kohl's. others?
+        if len(code) == 30:
+            code = code[-19:]
+        elif len(code) != 19 and len(code) != 16:
+            self.ids.code_inputfield.text = ''
+            Clock.schedule_once(self.focus_code_inputfield, -1)
+            return
+
+        self.ids.csv_output.text += ' '.join(code[i:i+4] for i in range(0,len(code), 4)) + "," \
+                                    + self.ids.pin_inputfield.text + "\r\n"
+        self.ids.pin_inputfield.text = ''
+        self.ids.code_inputfield.text = ''
+        Clock.schedule_once(self.focus_pin_inputfield, -1)
+
+    def clear_release(self, value):
+        if value == "normal":
+            self.ids.csv_output.text = ""
+            Clock.schedule_once(self.focus_pin_inputfield, -1)
+
+    def copy_output(self, value):
+        if value == "normal":
+            Clipboard.copy(self.ids.csv_output.text)
+
+
 class SwiperApp(App):
     def build(self):
-        return InputWindow()
+        inp = InputWindow()
+        th = TabbedPanelHeader(text='Swipe')
+        th.content = Swipe()
+        inp.add_widget(th)
+        th = TabbedPanelHeader(text='Barcode')
+        th.content = Barcode()
+        inp.add_widget(th)
+        return inp
 
 SwiperApp().run()

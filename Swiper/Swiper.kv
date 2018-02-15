@@ -1,19 +1,75 @@
 <InputWindow>:
+    do_default_tab: False
+
+<Swipe>:
+    orientation: 'vertical'
+    BoxLayout:
+        size_hint: 1,.08
+        size_hint_max_y: 30
+
+        orientation: 'horizontal'
+        TextInput:
+            id: inputfield
+            size_hint: .2, 1
+            size_hint_min_x: 20
+            multiline: False
+            focus: True
+            hint_text: "Type PIN, then swipe card. If no PIN, just swipe."
+            on_text_validate: root.inputfield_entered()
+
+    BoxLayout:
+        orientation: 'horizontal'
+
+        TextInput:
+            size_hint: .9,1
+            id: csv_output
+            readonly: True
+            hint_text: "Cards will show here."
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: .1,1
+            size_hint_min_x: 50
+
+            Button:
+                size_hint_max_y: 30
+                id: copy
+                text: "Copy"
+                on_state: root.copy_output(self.state)
+
+            Button:
+                size_hint_max_y: 30
+                id: clear
+                text: "Clear"
+                on_state: root.clear_release(self.state)
+
+            Widget:
+
+<Barcode>:
     BoxLayout:
         orientation: 'vertical'
         BoxLayout:
-            size_hint: 1,.08
+            size_hint: 1,1
             size_hint_max_y: 30
 
             orientation: 'horizontal'
             TextInput:
-                id: inputfield
+                id: pin_inputfield
                 size_hint: .2, 1
                 size_hint_min_x: 20
                 multiline: False
                 focus: True
-                hint_text: "Type PIN, then swipe card. If no PIN, just swipe."
-                on_text_validate: root.inputfield_entered()
+                hint_text: "PIN or enter"
+                on_text_validate: root.pin_inputfield_entered()
+
+            TextInput:
+                id: code_inputfield
+                size_hint: 1, 1
+                size_hint_min_x: 20
+                multiline: False
+                focus: True
+                hint_text: "Scan barcode"
+                on_text_validate: root.code_inputfield_entered()
 
         BoxLayout:
             orientation: 'horizontal'
@@ -40,12 +96,11 @@
                     id: clear
                     text: "Clear"
                     on_state: root.clear_release(self.state)
-
-                Button:
-                    size_hint_max_y: 30
-                    id: save
-                    text: "Save"
-                    on_release: root.show_save()
+#                    Button:
+#                        size_hint_max_y: 30
+#                        id: save
+#                        text: "Save"
+#                        on_release: root.show_save()
 
                 Widget:
 
