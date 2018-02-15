@@ -1,59 +1,45 @@
 from kivy.uix.button import Button
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
-from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
-from kivy.uix.settings import SettingsWithTabbedPanel
-from kivy.uix.dropdown import DropDown
-from kivy.uix.settings import SettingString
-from kivy.uix.label import Label
 from imaplib import IMAP4, IMAP4_SSL
 from datetime import datetime, timedelta, date
 from selenium import webdriver
-from kivy.clock import Clock, mainthread
-from kivy.resources import resource_add_path
-from kivy.lang import Builder
+from kivy.clock import mainthread
 from bs4 import BeautifulSoup
+from kivy.uix.dropdown import DropDown
 import email
 import threading
 import os, sys
-try:
-    # Python2
-    import Tkinter as tk
-except ImportError:
-    # Python3
-    import tkinter as tk
-from extractors import *
-
-class PasswordLabel(Label):
-    pass
-
+import tkinter as tk
+from Extract.extractors import *
 
 class ExtractDialog(BoxLayout):
     pass
 
 
-class SettingPassword(SettingString):
-    def _create_popup(self, instance):
-        super(SettingPassword, self)._create_popup(instance)
-        self.textinput.password = True
+class Extract(BoxLayout):
+    def build(self):
+        dropdown = DropDown()
+        for e in extractors_list:
+            btn = Button(text=e.name(), size_hint_y=None, height=30)
+            btn.bind(on_release=lambda dbtn: dropdown.select(dbtn.text))
+            dropdown.add_widget(btn)
 
-    def add_widget(self, widget, *largs):
-        if self.content is None:
-            super(SettingString, self).add_widget(widget, *largs)
-        if isinstance(widget, PasswordLabel):
-            return self.content.add_widget(widget, *largs)
+        self.ids.dropdownbtn.bind(on_release=dropdown.open)
+        self.ids.dropdownbtn.text = App.get_running_app().config.get('Settings', 'selected_source')
+        dropdown.bind(on_select=lambda instance, x: self.dropdown_selected(x))
 
-class SaveDialog(FloatLayout):
-    save = ObjectProperty(None)
-    text_input = ObjectProperty(None)
-    cancel = ObjectProperty(None)
+        self.dropdown = dropdown
 
-    def get_path(self):
-        return os.path.expanduser("~")
+    def selected(self):
+        pass
 
-class InputWindow(BoxLayout):
+    def dropdown_selected(self, text):
+        c = App.get_running_app().config
+        self.ids.dropdownbtn.text = text
+        c.set('Settings', 'selected_source', text)
+        c.write()
 
     def clear_release(self, value):
         if value == "normal":
@@ -61,10 +47,10 @@ class InputWindow(BoxLayout):
 
     def copy_output(self, value):
         if value == "normal":
+            #use tkinter here because Kivy clip board is broken
             tkwin = tk.Tk()
             tkwin.withdraw()
             tkwin.clipboard_append(self.ids.csv_output.text)
-#            Clipboard.copy(self.ids.csv_output.text)
 
     def dismiss_popup(self):
         self._popup.dismiss()
@@ -114,7 +100,7 @@ class InputWindow(BoxLayout):
         cards = {}
         urls = []
 
-        e = [x for x in extractors_list if x.name() == a.window.ids.dropdownbtn.text]
+        e = [x for x in extractors_list if x.name() == self.ids.dropdownbtn.text]
         if len(e) == 1:
             extractor = e[0]
         else:
@@ -222,66 +208,3 @@ class InputWindow(BoxLayout):
         browser.close()
         self.extractdialog._browser = None
         self.popup.dismiss()
-
-class ExtractorApp(App):
-    def build_config(self, config):
-        config.setdefaults('Settings', {'chromedriver_path': '', 'days': 1, 'selected_source': 'Paypal Digital Gifts', 'hide_chrome_window': 1, 'screenshots': 0})
-        config.setdefaults('Email1', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
-        config.setdefaults('Email2', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
-        config.setdefaults('Email3', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
-        config.setdefaults('Email4', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
-
-    def resource_path(self, relative_path=None):
-        """ Get absolute path to resource, works for dev and for PyInstaller """
-        try:
-            # PyInstaller creates a temp folder and stores path in _MEIPASS
-            base_path = sys._MEIPASS
-        except Exception:
-            base_path = os.path.abspath(".")
-
-        if relative_path:
-            return os.path.join(base_path, relative_path)
-        else:
-            return base_path
-
-    def build_settings(self, settings):
-        settings.register_type('password', SettingPassword)
-        settings.add_json_panel('Settings', self.config, self.resource_path('ExtractorSettings.json'))
-        settings.add_json_panel('Emails', self.config, self.resource_path('ExtractorEmails.json'))
-
-    def dropdown_selected(self, text):
-        self.window.ids.dropdownbtn.text = text
-        self.config.set('Settings', 'selected_source', text)
-        self.config.write()
-
-    def build(self):
-        resource_add_path(self.resource_path())
-        # load .kv file if in PyInstaller
-        if hasattr(sys, '_MEIPASS'):
-            Builder.load_file('Extractor.kv')
-        self.settings_cls = SettingsWithTabbedPanel
-        self.use_kivy_settings = False
-        window = InputWindow()
-        dropdown = DropDown()
-        for e in extractors_list:
-            btn = Button(text=e.name(), size_hint_y=None, height=30)
-            btn.bind(on_release=lambda dbtn: dropdown.select(dbtn.text))
-            dropdown.add_widget(btn)
-
-        window.ids.dropdownbtn.bind(on_release=dropdown.open)
-        window.ids.dropdownbtn.text = self.config.get('Settings', 'selected_source')
-        dropdown.bind(on_select=lambda instance, x: self.dropdown_selected(x))
-
-        self.window = window
-        self.dropdown = dropdown
-        return window
-
-    def on_config_change(self, config, section, key, value):
-        self.window.ids.dropdownbtn.bind(on_release=self.dropdown.open)
-        pass
-
-
-if __name__ == "__main__":
-    file_dir = os.path.dirname(__file__)
-    sys.path.append(file_dir)
-    ExtractorApp().run()

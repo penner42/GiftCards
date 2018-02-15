@@ -1,5 +1,4 @@
 ### Project-specific files ###
-config.py
 *.csv
 *.xlsx
 screenshots/*
@@ -188,3 +187,4 @@ ENV/
 
 # Rope project settings
 .ropeproject
+/giftcards.ini
