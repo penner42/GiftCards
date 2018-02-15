@@ -78,8 +78,15 @@ class PPDGExtractor(Extractor):
             x = browser.get_window_position()['x']
             if x == -10000:
                 browser.set_window_position(10,10)
-            wait = WebDriverWait(browser, 120)
-            wait.until(EC.presence_of_element_located((By.ID, "react-engine-props")))
+            finished = False
+            while not finished:
+                try:
+                    wait = WebDriverWait(browser, 10)
+                    wait.until(EC.presence_of_element_located((By.ID, "react-engine-props")))
+                    finished = True
+                except TimeoutException:
+                    pass
+
             if x == -10000:
                 browser.set_window_position(-10000,0)
         except NoSuchElementException:
