@@ -72,6 +72,21 @@ class PPDGExtractor(Extractor):
         return "gifts@paypal.com"
 
     @staticmethod
+    def complete_challenge(browser, email, phonenum):
+        try:
+            browser.find_element_by_id('captcha-standalone')
+            x = browser.get_window_position()['x']
+            if x == -10000:
+                browser.set_window_position(10,10)
+            wait = WebDriverWait(browser, 120)
+            wait.until(EC.presence_of_element_located((By.ID, "react-engine-props")))
+            if x == -10000:
+                browser.set_window_position(-10000,0)
+        except NoSuchElementException:
+            return None
+
+
+    @staticmethod
     def fetch_payload(msg):
         return msg.get_payload(decode=True)
 

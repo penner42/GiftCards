@@ -2,7 +2,6 @@ from kivy.uix.button import Button
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
-from kivy.core.clipboard import Clipboard
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 from kivy.uix.settings import SettingsWithTabbedPanel
@@ -19,6 +18,12 @@ from bs4 import BeautifulSoup
 import email
 import threading
 import os, sys
+try:
+    # Python2
+    import Tkinter as tk
+except ImportError:
+    # Python3
+    import tkinter as tk
 from extractors import *
 
 class PasswordLabel(Label):
@@ -56,7 +61,10 @@ class InputWindow(BoxLayout):
 
     def copy_output(self, value):
         if value == "normal":
-            Clipboard.copy(self.ids.csv_output.text)
+            tkwin = tk.Tk()
+            tkwin.withdraw()
+            tkwin.clipboard_append(self.ids.csv_output.text)
+#            Clipboard.copy(self.ids.csv_output.text)
 
     def dismiss_popup(self):
         self._popup.dismiss()
@@ -161,9 +169,9 @@ class InputWindow(BoxLayout):
                             if url is not None:
                                 if isinstance(url, list):
                                     for u in url:
-                                        urls.append([msg_id, datetime_received, u, imap_username])
+                                        urls.append([msg_id, datetime_received, u, imap_username, phonenum])
                                 else:
-                                    urls.append([msg_id, datetime_received, url, imap_username])
+                                    urls.append([msg_id, datetime_received, url, imap_username, phonenum])
         if len(urls) < 1:
             self.popup.dismiss()
             return
@@ -177,7 +185,7 @@ class InputWindow(BoxLayout):
             browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
             self.extractdialog._browser = browser
 
-        for msg_id, datetime_received, url, imap_username in urls:
+        for msg_id, datetime_received, url, imap_username, phonenum in urls:
             self.update_progress("Getting gift card from msg "+str(msg_id))
             # repeat until code isn't empty?
             while True:
