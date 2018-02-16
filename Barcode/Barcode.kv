@@ -1,3 +1,5 @@
+#:import FixBrokenClipboardTextInput FixBrokenClipboardTextInput.FixBrokenClipboardTextInput
+
 <Barcode>:
     orientation: 'vertical'
     BoxLayout:
@@ -5,7 +7,7 @@
         size_hint_max_y: 30
 
         orientation: 'horizontal'
-        TextInput:
+        FixBrokenClipboardTextInput:
             id: pin_inputfield
             size_hint: .2, 1
             size_hint_min_x: 20
@@ -14,7 +16,7 @@
             hint_text: "PIN or enter"
             on_text_validate: root.pin_inputfield_entered()
 
-        TextInput:
+        FixBrokenClipboardTextInput:
             id: code_inputfield
             size_hint: 1, 1
             size_hint_min_x: 20
@@ -26,7 +28,7 @@
     BoxLayout:
         orientation: 'horizontal'
 
-        TextInput:
+        FixBrokenClipboardTextInput:
             size_hint: .9,1
             id: csv_output
             readonly: True

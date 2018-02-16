@@ -1,3 +1,5 @@
+#:import FixBrokenClipboardTextInput FixBrokenClipboardTextInput.FixBrokenClipboardTextInput
+
 <Extract>
     BoxLayout:
         orientation: 'vertical'
@@ -22,7 +24,7 @@
         BoxLayout:
             orientation: 'horizontal'
 
-            TextInput:
+            FixBrokenClipboardTextInput:
                 size_hint: .9,1
                 id: csv_output
                 readonly: True
@@ -73,7 +75,7 @@
             path: root.get_path()
             on_selection: text_input.text = self.selection and self.selection[0] or ''
 
-        TextInput:
+        FixBrokenClipboardTextInput:
             id: text_input
             size_hint_y: None
             height: 30
