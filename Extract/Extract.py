@@ -79,7 +79,7 @@ class Extract(BoxLayout):
 
     def extract_cards(self):
         extractdialog = ExtractDialog()
-        self.popup = Popup(title='extracting', content=extractdialog, size_hint=(.5,.5), auto_dismiss=False)
+        self.popup = Popup(title='Extracting cards...', content=extractdialog, size_hint=(.55,.3), auto_dismiss=False)
         self.extractdialog = extractdialog
         self.popup.open()
         threading.Thread(target=self.extract_cards_real).start()
@@ -100,6 +100,7 @@ class Extract(BoxLayout):
         a = App.get_running_app()
         config = a.config
         extractor = None
+        self.update_progress("Initializing...", 0)
         cards = {}
         urls = []
 
@@ -120,6 +121,8 @@ class Extract(BoxLayout):
                 imap_password = config.get(section, 'imap_password')
                 phonenum = config.get(section, 'phonenum')
 
+                self.update_progress("Connecting to {}...".format(imap_username))
+
                 # Connect to the server
                 if imap_ssl:
                     mailbox = IMAP4_SSL(host=imap_host, port=imap_port)
@@ -139,7 +142,7 @@ class Extract(BoxLayout):
                     # Convert the result list to an array of message IDs
                     messages = messages[0].split()
                     for msg_id in messages:
-                        self.update_progress("---> Processing message id {}...".format(msg_id.decode('UTF-8')), 0)
+                        self.update_progress("{}:\n     Processing message id {}...".format(imap_username, msg_id.decode('ascii')), 0)
                         # Fetch it from the server
                         status, data = mailbox.fetch(msg_id, '(RFC822)')
                         if status == "OK":
@@ -158,9 +161,9 @@ class Extract(BoxLayout):
                             if url is not None:
                                 if isinstance(url, list):
                                     for u in url:
-                                        urls.append([msg_id, datetime_received, u, imap_username, phonenum])
+                                        urls.append([msg_id.decode('ascii'), datetime_received, u, imap_username, phonenum])
                                 else:
-                                    urls.append([msg_id, datetime_received, url, imap_username, phonenum])
+                                    urls.append([msg_id.decode('ascii'), datetime_received, url, imap_username, phonenum])
         if len(urls) < 1:
             self.popup.dismiss()
             return
@@ -175,7 +178,7 @@ class Extract(BoxLayout):
             self.extractdialog._browser = browser
 
         for msg_id, datetime_received, url, imap_username, phonenum in urls:
-            self.update_progress("Getting gift card from msg "+str(msg_id))
+            self.update_progress("{}\n     Getting gift card from message id: {}".format(imap_username, msg_id))
             # repeat until code isn't empty?
             while True:
                 browser.get(url)

@@ -4,4 +4,3 @@ selenium
 Kivy
 kivy.deps.sdl2
 kivy.deps.glew
-PyInstaller
