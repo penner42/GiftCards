@@ -8,6 +8,7 @@ from kivy.uix.settings import SettingString
 from Extract import Extract
 from Barcode import Barcode
 from Swipe import Swipe
+import tkinter as tk
 import os
 
 class SaveDialog(FloatLayout):

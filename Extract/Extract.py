@@ -47,10 +47,13 @@ class Extract(BoxLayout):
 
     def copy_output(self, value):
         if value == "normal":
-            #use tkinter here because Kivy clip board is broken
+            # use tkinter here because Kivy clipboard is broken
             tkwin = tk.Tk()
             tkwin.withdraw()
+            tkwin.clipboard_clear()
             tkwin.clipboard_append(self.ids.csv_output.text)
+            tkwin.update()
+            tkwin.destroy()
 
     def dismiss_popup(self):
         self._popup.dismiss()
