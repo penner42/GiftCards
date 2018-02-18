@@ -1,68 +1,70 @@
 #:import FixBrokenClipboardTextInput FixBrokenClipboardTextInput.FixBrokenClipboardTextInput
 
 <Extract>
+    orientation: 'vertical'
     BoxLayout:
-        orientation: 'vertical'
-        BoxLayout:
-            size_hint: 1,.08
-            size_hint_max_y: 30
+        size_hint: 1,.08
+        size_hint_max_y: 30
 
-            orientation: 'horizontal'
-            Button:
-                id: dropdownbtn
-                height: 30
-                text: 'Select'
+        orientation: 'horizontal'
+        Button:
+            id: dropdownbtn
+            height: 30
+            text: 'Select'
 
-            Button:
-                id: start
-                text: 'Extract!'
-                background_color: [0,0.9,0,1]
-                on_release: root.extract_cards()
+        Button:
+            id: start
+            text: 'Extract!'
+            background_color: [0,0.9,0,1]
+            on_release: root.extract_cards()
 
-            Label:
+        Label:
 
-        BoxLayout:
-            orientation: 'horizontal'
+    CommonWidgets:
 
-            FixBrokenClipboardTextInput:
-                size_hint: .9,1
-                id: csv_output
-                readonly: True
-                multiline: False
-                allow_copy: True
-                copydata: self.text
-                hint_text: "Cards will show here."
 
-            BoxLayout:
-                orientation: 'vertical'
-                size_hint: .1,1
-                size_hint_min_x: 50
-
-                Button:
-                    size_hint_max_y: 30
-                    id: copy
-                    text: "Copy"
-                    on_state: root.copy_output(self.state)
-
-                Button:
-                    size_hint_max_y: 30
-                    id: clear
-                    text: "Clear"
-                    on_state: root.clear_release(self.state)
-
-                Button:
-                    size_hint_max_y: 30
-                    id: save
-                    text: "Save"
-                    on_release: root.save_file()
-
-                Widget:
-
-                Button:
-                    size_hint_max_y: 30
-                    id: save
-                    text: "Exit"
-                    on_release: root.exit()
+#        BoxLayout:
+#            orientation: 'horizontal'
+#
+#            FixBrokenClipboardTextInput:
+#                size_hint: .9,1
+#                id: csv_output
+#                readonly: True
+#                multiline: False
+#                allow_copy: True
+#                copydata: self.text
+#                hint_text: "Cards will show here."
+#
+#            BoxLayout:
+#                orientation: 'vertical'
+#                size_hint: .1,1
+#                size_hint_min_x: 50
+#
+#                Button:
+#                    size_hint_max_y: 30
+#                    id: copy
+#                    text: "Copy"
+#                    on_state: root.copy_output(self.state)
+#
+#                Button:
+#                    size_hint_max_y: 30
+#                    id: clear
+#                    text: "Clear"
+#                    on_state: root.clear_release(self.state)
+#
+#                Button:
+#                    size_hint_max_y: 30
+#                    id: save
+#                    text: "Save"
+#                    on_release: root.save_file()
+#
+#                Widget:
+#
+#                Button:
+#                    size_hint_max_y: 30
+#                    id: save
+#                    text: "Exit"
+#                    on_release: root.exit()
 
 <SaveDialog>:
     text_input: text_input

@@ -41,20 +41,6 @@ class Extract(BoxLayout):
         c.set('Settings', 'selected_source', text)
         c.write()
 
-    def clear_release(self, value):
-        if value == "normal":
-            self.ids.csv_output.text = ""
-
-    def copy_output(self, value):
-        if value == "normal":
-            # use tkinter here because Kivy clipboard is broken
-            tkwin = tk.Tk()
-            tkwin.withdraw()
-            tkwin.clipboard_clear()
-            tkwin.clipboard_append(self.ids.csv_output.text)
-            tkwin.update()
-            tkwin.destroy()
-
     def dismiss_popup(self):
         self._popup.dismiss()
 
@@ -205,11 +191,11 @@ class Extract(BoxLayout):
         for store in cards:
             # sort by time received
             cards[store] = sorted(cards[store], key=lambda k: k['datetime_received'])
-            self.ids.csv_output.text += store + "\r\n"
+            self.children[0].ids.csv_output.text += store + "\r\n"
             for c in cards[store]:
-                self.ids.csv_output.text += "{},{},{},{},{},{}".format(
+                self.children[0].ids.csv_output.text += "{},{},{},{},{},{}".format(
                     c['card_code'],c['card_pin'],c['card_amount'],c['card_store'],c['datetime_received'],c['url'])+"\r\n"
-            self.ids.csv_output.text += "\r\n"
+            self.children[0].ids.csv_output.text += "\r\n"
 
         browser.close()
         self.extractdialog._browser = None

@@ -4,7 +4,49 @@
 
 <GiftCards>:
     do_default_tab: False
-    size_hint: 1,1
+
+<CommonWidgets@BoxLayout>
+    orientation: 'horizontal'
+
+    FixBrokenClipboardTextInput:
+        size_hint: .9,1
+        id: csv_output
+        readonly: True
+        multiline: False
+        allow_copy: True
+        copydata: self.text
+        hint_text: "Cards will show here."
+
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: .1,1
+        size_hint_min_x: 50
+
+        Button:
+            size_hint_max_y: 30
+            id: copy
+            text: "Copy"
+            on_state: root.copy_output(self.state)
+
+        Button:
+            size_hint_max_y: 30
+            id: clear
+            text: "Clear"
+            on_state: root.clear_release(self.state)
+
+#        Button:
+#            size_hint_max_y: 30
+#            id: save
+#            text: "Save"
+#            on_release: root.save_file()
+
+        Widget:
+
+        Button:
+            size_hint_max_y: 30
+            id: save
+            text: "Exit"
+            on_release: root.exit()
 
 <SaveDialog>:
     text_input: text_input

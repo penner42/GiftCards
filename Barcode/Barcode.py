@@ -1,7 +1,6 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
-import tkinter as tk
-
+import re
 
 class Barcode(BoxLayout):
     def focus_pin_inputfield(self, dt):
@@ -17,12 +16,16 @@ class Barcode(BoxLayout):
         # kohl's. others?
         if len(code) == 30:
             code = code[-19:]
+        # cabela's
+        elif re.search("^\d{10}[a-zA-Z]{6}$", code):
+            pin = code[-6:]
+            code = code[:9]
         elif len(code) != 19 and len(code) != 16:
             self.ids.code_inputfield.text = ''
             Clock.schedule_once(self.focus_code_inputfield, -1)
             return
 
-        self.ids.csv_output.text += ' '.join(code[i:i+4] for i in range(0,len(code), 4)) + "," \
+        self.children[0].ids.csv_output.text += ' '.join(code[i:i+4] for i in range(0,len(code), 4)) + "," \
                                     + pin + "\r\n"
         self.ids.pin_inputfield.text = ''
         self.ids.code_inputfield.text = ''
@@ -38,19 +41,3 @@ class Barcode(BoxLayout):
 
     def code_inputfield_entered(self):
         self.detect(self.ids.pin_inputfield.text, self.ids.code_inputfield.text)
-
-    def clear_release(self, value):
-        if value == "normal":
-            self.ids.csv_output.text = ""
-            Clock.schedule_once(self.focus_pin_inputfield, -1)
-
-    def copy_output(self, value):
-        if value == "normal":
-            # use tkinter here because Kivy clipboard is broken
-            tkwin = tk.Tk()
-            tkwin.withdraw()
-            tkwin.clipboard_clear()
-            tkwin.clipboard_append(self.ids.csv_output.text)
-            tkwin.update()
-            tkwin.destroy()
-

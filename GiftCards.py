@@ -1,5 +1,6 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelHeader
 from kivy.properties import ObjectProperty
 from kivy.uix.label import Label
@@ -9,7 +10,7 @@ from Extract import Extract
 from Barcode import Barcode
 from Swipe import Swipe
 import tkinter as tk
-import os
+import os, sys
 
 class SaveDialog(FloatLayout):
     save = ObjectProperty(None)
@@ -37,6 +38,25 @@ class SettingPassword(SettingString):
             super(SettingString, self).add_widget(widget, *largs)
         if isinstance(widget, PasswordLabel):
             return self.content.add_widget(widget, *largs)
+
+
+class CommonWidgets(BoxLayout):
+    def exit(self):
+        sys.exit()
+
+    def clear_release(self, value):
+        if value == "normal":
+            self.ids.csv_output.text = ""
+
+    def copy_output(self, value):
+        if value == "normal":
+            # use tkinter here because Kivy clipboard is broken
+            tkwin = tk.Tk()
+            tkwin.withdraw()
+            tkwin.clipboard_clear()
+            tkwin.clipboard_append(self.ids.csv_output.text)
+            tkwin.update()
+            tkwin.destroy()
 
 
 class GiftCardsApp(App):

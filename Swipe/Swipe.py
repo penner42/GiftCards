@@ -2,7 +2,6 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
 import tkinter as tk
 
-
 class Swipe(BoxLayout):
     def focus_inputfield(self, dt):
         self.ids.inputfield.focus = True
@@ -24,24 +23,9 @@ class Swipe(BoxLayout):
             Clock.schedule_once(self.focus_inputfield, -1)
         else:
             card_no = self.detect(data)
-            self.ids.csv_output.text += card_no + "," + pin + "\r\n"
+            self.children[0].ids.csv_output.text += card_no + "," + pin + "\r\n"
             self.ids.inputfield.text = ""
             Clock.schedule_once(self.focus_inputfield, -1)
-
-    def clear_release(self, value):
-        if value == "normal":
-            self.ids.csv_output.text = ""
-            Clock.schedule_once(self.focus_inputfield, -1)
-
-    def copy_output(self, value):
-        if value == "normal":
-            # use tkinter here because Kivy clipboard is broken
-            tkwin = tk.Tk()
-            tkwin.withdraw()
-            tkwin.clipboard_clear()
-            tkwin.clipboard_append(self.ids.csv_output.text)
-            tkwin.update()
-            tkwin.destroy()
 
     def detect(self, data):
         sec1, sec2, sec3 = data.split('^')
@@ -54,19 +38,3 @@ class Swipe(BoxLayout):
             cardno = sec1[0:20]
 
         return ' '.join(cardno[i:i+4] for i in range(0,len(cardno), 4))
-    #
-    # def dismiss_popup(self):
-    #     self._popup.dismiss()
-    #
-    # def show_save(self):
-    #     content = SaveDialog(save=self.save, cancel=self.dismiss_popup)
-    #     self._popup = Popup(title="Save file", content=content,
-    #                         size_hint=(0.9, 0.9))
-    #     self._popup.open()
-    #
-    # def save(self, path, filename):
-    #     with open(os.path.join(path, filename), 'w') as stream:
-    #         stream.write(self.ids.csv_output.text)
-    #
-    #     self.dismiss_popup()
-    #
