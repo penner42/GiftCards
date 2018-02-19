@@ -15,12 +15,6 @@
     },
     {
         "type": "bool",
-        "title": "Screenshots",
-        "section": "Settings",
-        "key": "screenshots"
-    },
-    {
-        "type": "bool",
         "title": "Hide Chrome Window",
         "desc": "May appear as necessary to complete captchas.",
         "section": "Settings",

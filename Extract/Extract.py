@@ -32,6 +32,18 @@ class Extract(BoxLayout):
 
         self.dropdown = dropdown
 
+    def screenshots_checked(self, value):
+        c = App.get_running_app().config
+        c.set('Settings', 'screenshots', 1 if value is True else 0)
+        c.write()
+
+    def label_checked(self):
+        c = App.get_running_app().config
+        value = int(c.get('Settings', 'screenshots')) ^ 1
+        self.ids.screenshots.active = value == 1
+        c.set('Settings', 'screenshots', value)
+        c.write()
+
     def selected(self):
         pass
 

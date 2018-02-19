@@ -106,19 +106,6 @@ class PPDGExtractor(Extractor):
 
     @staticmethod
     def fetch_codes(browser):
-        # found_codes = False
-        # # card store
-        # subdiv = 3
-        # try:
-        #     browser.find_element_by_id("DM_categories")
-        #     subdiv = 4
-        # except NoSuchElementException:
-        #     pass
-        #
-        # try:
-        #     card_store = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-        #         subdiv) + "]/section/div/div[1]/div/div/img").get_attribute("alt")
-        # except NoSuchElementException:
         script_json = json.loads(browser.find_element_by_id('react-engine-props').get_attribute('innerHTML'))
         card_store = script_json['cardDetails']['description']
         card_amount = script_json['cardDetails']['itemValue']
@@ -127,35 +114,6 @@ class PPDGExtractor(Extractor):
             card_pin = script_json['cardDetails']['giftCard']['security_code']
         except KeyError:
             card_pin = ''
-
-        # found_codes = True
-
-        # # Get the card amount
-        # if found_codes is False:
-        #     try:
-        #         browser.find_element_by_class_name("barcode")
-        #         card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-        #             subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[1]/dd").text.strip()
-        #         # Get the card number
-        #         card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-        #             subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[2]/dd").text.strip()
-        #         try:
-        #             card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-        #                 subdiv) + "]/section/div/div[1]/div/div/div[2]/dl[3]/dd").text.strip()
-        #         except NoSuchElementException:
-        #             card_pin = ''
-        #
-        #     except NoSuchElementException:
-        #         card_amount = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-        #             subdiv) + "]/section/div/div[1]/div/div/div[1]/dl[1]/dd").text.strip()
-        #         # Get the card number
-        #         card_code = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-        #             subdiv) + "]/section/div/div[1]/div/div/div[1]/dl[2]/dd").text.strip()
-        #         try:
-        #             card_pin = browser.find_element_by_xpath("//*[@id=\"main-content\"]/div[3]/div/div[" + str(
-        #                 subdiv) + "]/section/div/div[1]/div/div/div/dl[3]/dd").text.strip()
-        #         except NoSuchElementException:
-        #             card_pin = ''
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
@@ -189,16 +147,21 @@ class CashstarExtractor(Extractor):
 
         emailaddr = browser.find_element_by_id("id_value")
         emailaddr.send_keys(email)
-        wait = WebDriverWait(browser, 15)
+        wait = WebDriverWait(browser, 3)
         while emailaddr.get_attribute("value") != email:
             try:
                 wait.until(EC.text_to_be_present_in_element_value((By.ID, "id_value"), email))
             except TimeoutException:
+                emailaddr.clear()
                 emailaddr.send_keys(email)
 
         emailaddr.submit()
-        wait.until(EC.presence_of_element_located((By.ID, "skip")))
-        skip = browser.find_element_by_id("skip")
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#skip, #redeem")))
+        try:
+            skip = browser.find_element_by_id("skip")
+        except NoSuchElementException:
+            skip = browser.find_element_by_id('redeem')
+
         browser.get(skip.get_attribute('href'))
 
     @staticmethod
@@ -209,16 +172,34 @@ class CashstarExtractor(Extractor):
         except NoSuchElementException:
             pass
 
-        a = ''
         try:
-            print(browser.find_element_by_xpath('//h1[contains(text(), "Here is your")]').text)
+            browser.find_element_by_class_name("promotion")
+            card_code = "{}{}{}{}".format(
+                browser.find_element_by_xpath(
+                    '//*[@id="container"]/div[1]/div[2]/div[2]/div[1]/div/div[1]/div/div/p[1]/span[1]').text,
+                browser.find_element_by_xpath(
+                    '//*[@id="container"]/div[1]/div[2]/div[2]/div[1]/div/div[1]/div/div/p[1]/span[2]').text,
+                browser.find_element_by_xpath(
+                    '//*[@id="container"]/div[1]/div[2]/div[2]/div[1]/div/div[1]/div/div/p[1]/span[3]').text,
+                browser.find_element_by_xpath(
+                    '//*[@id="container"]/div[1]/div[2]/div[2]/div[1]/div/div[1]/div/div/p[1]/span[4]').text
+            )
+            card_pin = browser.find_element_by_xpath(
+                '//*[@id="container"]/div[1]/div[2]/div[2]/div[1]/div/div[1]/div/div/p[2]').text[5:]
+            card_amount = browser.find_element_by_xpath(
+                '//*[@id="container"]/div[1]/div[2]/div[2]/div[1]/div/div[1]/div/div/p[3]').text[8:-4]
+            card_store = browser.find_element_by_class_name("header").find_element_by_css_selector('a').get_attribute('href')
         except NoSuchElementException:
-            pass
+            card_code = "{}{}{}{}".format(
+                browser.find_element_by_xpath('//*[@id="container"]/div[1]/div[2]/div[3]/div[2]/p[1]/span[1]').text,
+                browser.find_element_by_xpath('//*[@id="container"]/div[1]/div[2]/div[3]/div[2]/p[1]/span[2]').text,
+                browser.find_element_by_xpath('//*[@id="container"]/div[1]/div[2]/div[3]/div[2]/p[1]/span[3]').text,
+                browser.find_element_by_xpath('//*[@id="container"]/div[1]/div[2]/div[3]/div[2]/p[1]/span[4]').text,
+            )
+            card_pin = browser.find_element_by_xpath('//*[@id="container"]/div[1]/div[2]/div[3]/div[2]/p[2]').text[5:]
+            card_amount = ''
+            card_store = browser.find_element_by_class_name("header").find_element_by_css_selector('a').get_attribute('href')
 
-        card_store = ''
-        card_amount = ''
-        card_code = 'a'
-        card_pin = ''
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
 
