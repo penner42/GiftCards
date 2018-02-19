@@ -146,6 +146,8 @@ class Extract(BoxLayout):
                         if status == "OK":
                             # Convert it to an Email object
                             msg = email.message_from_bytes(data[0][1])
+                            # Get To: address for challenge completion
+                            to_address = msg.get("To", imap_username)
                             # Get the HTML body payload
                             msg_html = extractor.fetch_payload(msg)
                             # Save the email timestamp
@@ -159,9 +161,11 @@ class Extract(BoxLayout):
                             if url is not None:
                                 if isinstance(url, list):
                                     for u in url:
-                                        urls.append([msg_id.decode('ascii'), datetime_received, u, imap_username, phonenum])
+                                        urls.append([msg_id.decode('ascii'),
+                                                     datetime_received, u, imap_username, to_address, phonenum])
                                 else:
-                                    urls.append([msg_id.decode('ascii'), datetime_received, url, imap_username, phonenum])
+                                    urls.append([msg_id.decode('ascii'),
+                                                 datetime_received, url, imap_username, to_address, phonenum])
         if len(urls) < 1:
             self.popup.dismiss()
             return
@@ -175,13 +179,13 @@ class Extract(BoxLayout):
             browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
             self.extractdialog._browser = browser
 
-        for msg_id, datetime_received, url, imap_username, phonenum in urls:
+        for msg_id, datetime_received, url, imap_username, to_address, phonenum in urls:
             self.update_progress("{}\n     Getting gift card from message id: {}".format(imap_username, msg_id))
             # repeat until code isn't empty?
             while True:
                 browser.get(url)
-                # challenege for Cashstar cards (and others?)
-                extractor.complete_challenge(browser, imap_username, phonenum)
+                # challenege for various cards
+                extractor.complete_challenge(browser, to_address, phonenum)
                 card = extractor.fetch_codes(browser)
 
                 if card is None:
