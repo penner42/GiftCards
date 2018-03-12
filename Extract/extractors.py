@@ -14,6 +14,45 @@ class Extractor:
     def subject():
         return ""
 
+class StaplesExtractor(Extractor):
+    @staticmethod
+    def name():
+        return "Staples"
+
+    @staticmethod
+    def email():
+        return "DoNotReply.Staples@blackhawk-net.com"
+
+    @staticmethod
+    def fetch_payload(msg):
+        return msg.get_payload(1).get_payload(decode=True)
+
+    @staticmethod
+    def fetch_url(msg_parsed, browser, email):
+        egc_link = msg_parsed.findAll("a", title=re.compile('View Gift'))
+        urls = []
+        if len(egc_link) > 0:
+            for u in egc_link:
+                urls.insert(0, u['href'])
+            return urls
+
+    @staticmethod
+    def fetch_codes(browser):
+        # Get the card amount
+        try:
+            card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+        except NoSuchElementException:
+            card_amount = 'Unknown'
+
+        # card store
+        card_store = '{} {}'.format(card_amount, browser.find_element_by_id('productName').get_attribute('value'))
+
+        # Get the card number
+        card_code = browser.find_element_by_id('cardNumber').get_attribute('value')
+        card_pin = browser.find_element_by_id('pinNumber').get_attribute('value')
+
+        return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
+
 class NeweggExtractor(Extractor):
     @staticmethod
     def name():
@@ -391,4 +430,4 @@ class BestBuyExtractor(Extractor):
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
-extractors_list = [AmazonExtractor, BestBuyExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor, NeweggExtractor, GiftCardMallExtractor]
+extractors_list = [AmazonExtractor, BestBuyExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor, NeweggExtractor, StaplesExtractor, GiftCardMallExtractor]

@@ -32,17 +32,24 @@ class Extract(BoxLayout):
 
         self.dropdown = dropdown
 
+    def print_checked(self, value):
+        pass
+
     def screenshots_checked(self, value):
         c = App.get_running_app().config
         c.set('Settings', 'screenshots', 1 if value is True else 0)
         c.write()
 
-    def label_checked(self):
-        c = App.get_running_app().config
-        value = int(c.get('Settings', 'screenshots')) ^ 1
-        self.ids.screenshots.active = value == 1
-        c.set('Settings', 'screenshots', value)
-        c.write()
+    def label_checked(self, label):
+        if label == 'screenshot':
+            c = App.get_running_app().config
+            value = int(c.get('Settings', 'screenshots')) ^ 1
+            self.ids.screenshots.active = value == 1
+            c.set('Settings', 'screenshots', value)
+            c.write()
+        elif label == 'print':
+            self.ids.prints.active = self.ids.prints.active == False
+
 
     def selected(self):
         pass
@@ -203,6 +210,8 @@ class Extract(BoxLayout):
                 cards[card['card_store']].append(card)
                 if int(config.get('Settings', 'screenshots')) == 1:
                     self.save_screenshot(browser, card['card_code'])
+                if self.ids.prints.active:
+                    browser.execute_script('window.print()')
 
         for store in cards:
             # sort by time received
