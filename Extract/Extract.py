@@ -212,6 +212,7 @@ class Extract(BoxLayout):
                     self.save_screenshot(browser, card['card_code'])
                 if self.ids.prints.active:
                     browser.execute_script('window.print()')
+                extractor.delay()
 
         for store in cards:
             # sort by time received

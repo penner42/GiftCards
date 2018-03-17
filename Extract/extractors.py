@@ -1,5 +1,5 @@
 from selenium.common.exceptions import NoSuchElementException
-import re, json
+import re, json, time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
@@ -13,6 +13,10 @@ class Extractor:
     @staticmethod
     def subject():
         return ""
+
+    @staticmethod
+    def delay():
+        pass
 
 class StaplesExtractor(Extractor):
     @staticmethod
@@ -109,6 +113,10 @@ class PPDGExtractor(Extractor):
     @staticmethod
     def email():
         return "gifts@paypal.com"
+
+    @staticmethod
+    def delay():
+        time.sleep(1)
 
     @staticmethod
     def complete_challenge(browser, email, phonenum):

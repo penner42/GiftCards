@@ -84,7 +84,8 @@ class GiftCardsApp(App):
 
     def build(self):
         # This seems to be necessary for things to load properly in Linux
-        Builder.load_file('GiftCards.kv')
+        if sys.platform == 'linux':
+            Builder.load_file('GiftCards.kv')
 
         self.settings_cls = SettingsWithTabbedPanel
         self.use_kivy_settings = False
