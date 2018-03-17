@@ -9,8 +9,8 @@ from kivy.uix.settings import SettingString
 from Extract import Extract
 from Barcode import Barcode
 from Swipe import Swipe
-import tkinter as tk
 import os, sys
+from kivy.lang.builder import Builder
 
 class SaveDialog(FloatLayout):
     save = ObjectProperty(None)
@@ -48,17 +48,6 @@ class CommonWidgets(BoxLayout):
         if value == "normal":
             self.ids.csv_output.text = ""
 
-    def copy_output(self, value):
-        if value == "normal":
-            # use tkinter here because Kivy clipboard is broken
-            tkwin = tk.Tk()
-            tkwin.withdraw()
-            tkwin.clipboard_clear()
-            tkwin.clipboard_append(self.ids.csv_output.text)
-            tkwin.update()
-            tkwin.destroy()
-
-
 class GiftCardsApp(App):
     def resource_path(self, relative_path=None):
         """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -82,8 +71,8 @@ class GiftCardsApp(App):
 
     def build_settings(self, settings):
         settings.register_type('password', SettingPassword)
-        settings.add_json_panel('Settings', self.config, self.resource_path('Settings\ExtractorSettings.json'))
-        settings.add_json_panel('Emails', self.config, self.resource_path('Settings\ExtractorEmails.json'))
+        settings.add_json_panel('Settings', self.config, self.resource_path('Settings/ExtractorSettings.json'))
+        settings.add_json_panel('Emails', self.config, self.resource_path('Settings/ExtractorEmails.json'))
 
     def close_settings(self, settings=None):
         self._tabbedpanel.switch_to(self._current_tab)
@@ -94,6 +83,9 @@ class GiftCardsApp(App):
         super(GiftCardsApp, self).open_settings()
 
     def build(self):
+        # This seems to be necessary for things to load properly in Linux
+        Builder.load_file('GiftCards.kv')
+
         self.settings_cls = SettingsWithTabbedPanel
         self.use_kivy_settings = False
         self._extract = Extract.Extract()
@@ -101,7 +93,7 @@ class GiftCardsApp(App):
         self._barcode = Barcode.Barcode()
         self._extract.build()
 
-        inp = GiftCards()
+        inp = GiftCards(do_default_tab=False)
         th = TabbedPanelHeader(text='Extract')
         th.content = self._extract
         th.bind(on_release=lambda instance: self._extract.selected())

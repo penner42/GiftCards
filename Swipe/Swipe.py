@@ -1,6 +1,6 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
-import tkinter as tk
+
 
 class Swipe(BoxLayout):
     def focus_inputfield(self, dt):

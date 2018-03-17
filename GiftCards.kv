@@ -8,7 +8,7 @@
 <CommonWidgets@BoxLayout>
     orientation: 'horizontal'
 
-    FixBrokenClipboardTextInput:
+    TextInput:
         size_hint: .9,1
         id: csv_output
         readonly: True
@@ -26,7 +26,7 @@
             size_hint_max_y: 30
             id: copy
             text: "Copy"
-            on_state: root.copy_output(self.state)
+            on_state: root.ids.csv_output.copy(root.ids.csv_output.text)
 
         Button:
             size_hint_max_y: 30
