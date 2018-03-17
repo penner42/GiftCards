@@ -1,20 +1,19 @@
-# Staples eGift Card Extractor
+# eGift Card Extractor, Swiper, Barcode reader
 
 This script will attempt to extract the card type, amount, number, and PIN
-given the claim emails sent by Staples.com and write it to a CSV. The script
-will also take a screenshot of each card and save it to `screenshots` in the
-current working directory.
+given the claim emails sent by a variety of gift card providers and format it as a CSV.
+The script will also optionally take a screenshot of each card.
 
 ## Installation
+Requires Python 3.
 
-Download or clone this repo and install [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/).
-Copy `config.sample.py` to `config.py` and update the configuration as needed,
-ensuring that `CHROMEDRIVER_PATH` is a fully-qualified path to the ChromeDriver
-binary. Install the dependencies with `pip install -r requirements.txt`. 
+Download or clone this repo and install 
+[ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/).
+Install the dependencies with `pip install -r requirements.txt`. Choose chromedriver location 
+and fill in email address information in Settings tab.
 
-## Caveats
-
-Different eGCs may have slightly different page layouts, which might break
-this script. To modify the script for a card with a different layout, inspect
-the element and copy its XPath, then replace the appropriate XPath in the
-script with the one from the page.
+Note: Kivy 1.10.0 clipboard is broken, and this currently requires Kivy 1.10.1-dev0. 
+Installation is not completely straightforward. A bug in pip requires Cython to be 
+installed separately prior to installing Kivy (```pip3 install Cython=0.25.2```). See Kivy installation instructions for building from
+source. ```pip3 install git+https://github.com/kivy/kivy.git@master``` should work if all 
+prerequisites are installed properly. Tested on Windows and Linux. Mac TBD.
