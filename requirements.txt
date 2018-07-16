@@ -1,7 +1,9 @@
 requests
 bs4
 selenium
-Cython==0.25.2
-git+https://github.com/kivy/kivy.git@master
+Cython
+Kivy
+#Cython==0.25.2
+#git+https://github.com/kivy/kivy.git@master
 #kivy.deps.sdl2
 #kivy.deps.glew
