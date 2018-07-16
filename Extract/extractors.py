@@ -272,19 +272,34 @@ class SamsungPayExtractor(Extractor):
     @staticmethod
     def fetch_codes(browser):
         # card store
-        card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
+        try:
+            card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
+        except NoSuchElementException:
+            card_store = 'unknown'
 
         # Get the card amount
         try:
             card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
         except NoSuchElementException:
-            card_amount = browser.find_element_by_xpath('//*[@id="amount"]').text.strip()
+            try:
+                card_amount = browser.find_element_by_xpath('//*[@id="amount"]').text.strip()
+            except NoSuchElementException:
+                try:
+                    card_amount = browser.find_element_by_xpath('//*[@id="card-details"]/b[2]').text.strip()
+                except NoSuchElementException:
+                    card_amount='unknown'
 
         # Get the card number
         try:
             card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
         except NoSuchElementException:
-            card_code = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div/p/span').text.strip()
+            try:
+                card_code = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div/p/span').text.strip()
+            except NoSuchElementException:
+                try:
+                    card_code = browser.find_element_by_xpath('//*[@id="cardNumber3"]').text.strip()
+                except NoSuchElementException:
+                    card_code = 'unknown'
 
         try:
             card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()

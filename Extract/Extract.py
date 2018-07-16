@@ -219,8 +219,10 @@ class Extract(BoxLayout):
             cards[store] = sorted(cards[store], key=lambda k: k['datetime_received'])
             self.children[0].ids.csv_output.text += store + "\r\n"
             for c in cards[store]:
-                self.children[0].ids.csv_output.text += "{},{},{},{},{},{}".format(
-                    c['card_code'],c['card_pin'],c['card_amount'],c['card_store'],c['datetime_received'],c['url'])+"\r\n"
+                # self.children[0].ids.csv_output.text += "{},{},{},{},{},{}".format(
+                #     c['card_code'],c['card_pin'],c['card_amount'],c['card_store'],c['datetime_received'],c['url'])+"\r\n"
+                self.children[0].ids.csv_output.text += "{},{},{}\r\n".format(
+                    c['card_amount'], c['card_code'], c['card_pin'])
             self.children[0].ids.csv_output.text += "\r\n"
 
         browser.close()
