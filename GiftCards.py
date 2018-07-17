@@ -63,7 +63,7 @@ class GiftCardsApp(App):
             return base_path
 
     def build_config(self, config):
-        config.setdefaults('Settings', {'chromedriver_path': '', 'days': 1, 'selected_source': 'Paypal Digital Gifts', 'hide_chrome_window': 1, 'screenshots': 0})
+        config.setdefaults('Settings', {'chromedriver_path': '', 'days': 1, 'selected_source': 'PayPal Digital Gifts', 'hide_chrome_window': 1, 'screenshots': 0})
         config.setdefaults('Email1', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
         config.setdefaults('Email2', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
         config.setdefaults('Email3', {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
