@@ -84,6 +84,13 @@ class NeweggExtractor(Extractor):
         # card store
         card_store = browser.title.strip()
 
+        # check if card is ready?
+        try:
+            browser.find_element_by_xpath('//*[contains(text(), "Your gift card number is currently being retrieved.")]')
+            return None
+        except NoSuchElementException:
+            pass
+
         # Get the card amount
         try:
             card_amount = browser.find_element_by_xpath('//*[@id="lblCertAmount"]').text.strip()
