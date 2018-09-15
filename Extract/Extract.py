@@ -182,7 +182,6 @@ class Extract(BoxLayout):
             chrome_options = webdriver.ChromeOptions()
             if int(config.get('Settings', 'hide_chrome_window')) == 1:
                 chrome_options.add_argument("--window-position=-10000,0")
-
             browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
             self.extractdialog._browser = browser
 

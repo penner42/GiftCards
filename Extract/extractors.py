@@ -278,40 +278,66 @@ class SamsungPayExtractor(Extractor):
 
     @staticmethod
     def fetch_codes(browser):
-        # card store
-        try:
-            card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
-        except NoSuchElementException:
-            card_store = 'unknown'
-
-        # Get the card amount
-        try:
-            card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
-        except NoSuchElementException:
+        if "gyft" in browser.current_url:
+            # card store
             try:
-                card_amount = browser.find_element_by_xpath('//*[@id="amount"]').text.strip()
+                card_store = browser.find_element_by_xpath('/html/body/main/aside/table/tbody/tr/td[2]/h6[2]').text
+            except NoSuchElementException:
+                card_store = 'unknown'
+
+            # card amount
+            try:
+                card_amount = browser.find_element_by_xpath('/html/body/main/aside/table/tbody/tr/td[2]/h6[1]').text
+            except NoSuchElementException:
+                card_amount = 'unknown'
+
+            # card number
+            try:
+                card_code = browser.find_element_by_xpath('/html/body/main/aside/div[5]/div/div[2]/div[2]').text
+            except NoSuchElementException:
+                card_code = 'unknown'
+
+            # card pin
+            try:
+                card_pin = browser.find_element_by_xpath('/html/body/main/aside/div[5]/div/div[4]/div[2]').text
+            except NoSuchElementException:
+                card_pin = ''
+
+        else:
+            # card store
+            try:
+                card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
+            except NoSuchElementException:
+                card_store = 'unknown'
+
+            # Get the card amount
+            try:
+                card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
             except NoSuchElementException:
                 try:
-                    card_amount = browser.find_element_by_xpath('//*[@id="card-details"]/b[2]').text.strip()
+                    card_amount = browser.find_element_by_xpath('//*[@id="amount"]').text.strip()
                 except NoSuchElementException:
-                    card_amount='unknown'
+                    try:
+                        card_amount = browser.find_element_by_xpath('//*[@id="card-details"]/b[2]').text.strip()
+                    except NoSuchElementException:
+                        card_amount='unknown'
 
-        # Get the card number
-        try:
-            card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
-        except NoSuchElementException:
+            # Get the card number
             try:
-                card_code = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div/p/span').text.strip()
+                card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
             except NoSuchElementException:
                 try:
-                    card_code = browser.find_element_by_xpath('//*[@id="cardNumber3"]').text.strip()
+                    card_code = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div/p/span').text.strip()
                 except NoSuchElementException:
-                    card_code = 'unknown'
+                    try:
+                        card_code = browser.find_element_by_xpath('//*[@id="cardNumber3"]').text.strip()
+                    except NoSuchElementException:
+                        card_code = 'unknown'
 
-        try:
-            card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
-        except NoSuchElementException:
-            card_pin = ''
+            try:
+                card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
+            except NoSuchElementException:
+                card_pin = ''
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
