@@ -336,7 +336,8 @@ class SamsungPayExtractor(Extractor):
                     {'id': '//*[@id="amount"]'},
                     {'id': '//*[@id="card-details"]/b[2]'},
                     {'id': '//*[@id="main"]/div[2]/div[1]/h1/span',
-                     'postprocess': lambda s: re.search('\$\d+', s.text.strip()).group(0)}
+                     'postprocess': lambda s: re.search('\$\d+', s.text.strip()).group(0)},
+                    {'id': '//*[@id="main"]/div[1]/div[2]/h2'}
                 ],
                 'Unknown Value')
 
