@@ -561,4 +561,5 @@ class MyGiftCardsPlusExtractor(Extractor):
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
 
-extractors_list = [AmazonExtractor, BestBuyExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor, NeweggExtractor, StaplesExtractor, GiftCardMallExtractor, MyGiftCardsPlusExtractor]
+extractors_list = [AmazonExtractor, BestBuyExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor,
+                   NeweggExtractor, StaplesExtractor, GiftCardMallExtractor, MyGiftCardsPlusExtractor]

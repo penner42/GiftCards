@@ -13,6 +13,7 @@ import threading
 import os, sys
 import tkinter as tk
 from Extract.extractors import *
+from imaplib import IMAP4
 
 class ExtractDialog(BoxLayout):
     pass
@@ -145,14 +146,26 @@ class Extract(BoxLayout):
 
                 if status == "OK":
                     # Convert the result list to an array of message IDs
-                    messages = messages[0].split()
-                    for msg_id in messages:
-                        self.update_progress("{}:\n     Processing message id {}...".format(imap_username, msg_id.decode('ascii')), 0)
-                        # Fetch it from the server
-                        status, data = mailbox.fetch(msg_id, '(RFC822)')
-                        if status == "OK":
-                            # Convert it to an Email object
-                            msg = email.message_from_bytes(data[0][1])
+                    messages = [m.decode('ascii') for m in messages[0].split()]
+                    if len(messages) == 0:
+                        continue
+                    self.update_progress("Fetching messages from {}...".format(imap_username))
+                    data = []
+                    try:
+                        status, data = mailbox.fetch(','.join(messages), '(RFC822)')
+                        # remove every other element of list, extract messages
+                        data = [email.message_from_bytes(i[1]) for index, i in enumerate(data) if (index + 1) % 2 != 0]
+                    except IMAP4.error:
+                        # Can't fetch all messages at once, do them one at a time
+                        for msg_id in messages:
+                            self.update_progress("{}:\n     Fetching message id {}...".format(imap_username, msg_id))
+                            # Fetch it from the server
+                            status, m = mailbox.fetch(msg_id, '(RFC822)')
+                            if status == "OK":
+                                data.append(email.message_from_bytes(m[0][1]))
+
+                    if status == "OK":
+                        for idx, msg in enumerate(data):
                             # Get To: address for challenge completion
                             to_address = msg.get("To", imap_username)
                             # Get the HTML body payload
@@ -168,10 +181,10 @@ class Extract(BoxLayout):
                             if url is not None:
                                 if isinstance(url, list):
                                     for u in url:
-                                        urls.append([msg_id.decode('ascii'),
+                                        urls.append([messages[idx],
                                                      datetime_received, u, imap_username, to_address, phonenum])
                                 else:
-                                    urls.append([msg_id.decode('ascii'),
+                                    urls.append([messages[idx],
                                                  datetime_received, url, imap_username, to_address, phonenum])
         if len(urls) < 1:
             self.popup.dismiss()
