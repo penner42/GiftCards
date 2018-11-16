@@ -200,9 +200,16 @@ class Extract(BoxLayout):
 
         for msg_id, datetime_received, url, imap_username, to_address, phonenum in urls:
             self.update_progress("{}\n     Getting gift card from message id: {}".format(imap_username, msg_id))
-            # repeat until code isn't empty?
             while True:
-                browser.get(url)
+                # keep retrying to load the page if it's timing out.
+                # TODO add cancel option
+                while True:
+                    try:
+                        browser.get(url)
+                    except TimeoutException:
+                        continue
+                    break
+
                 # challenege for various cards
                 extractor.complete_challenge(browser, to_address, phonenum)
                 card = extractor.fetch_codes(browser)
