@@ -56,3 +56,13 @@
             id: progresslabel
             text: ''
 
+        BoxLayout:
+            size_hint_max_y: 20
+
+            Label:
+
+            Button:
+                size_hint: .2, 1
+                id: toggle_chrome
+                text: 'Chrome'
+                on_release: root.toggle_chrome()

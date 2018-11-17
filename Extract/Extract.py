@@ -11,12 +11,14 @@ from kivy.uix.dropdown import DropDown
 import email
 import threading
 import os, sys
-import tkinter as tk
+from custom_webdriver.custom_webdriver import CustomWebDriver
 from Extract.extractors import *
 from imaplib import IMAP4
 
 class ExtractDialog(BoxLayout):
-    pass
+    @mainthread
+    def toggle_chrome(self):
+        self._browser.toggle()
 
 
 class Extract(BoxLayout):
@@ -81,7 +83,7 @@ class Extract(BoxLayout):
 
     @mainthread
     def update_progress(self, text, value=0):
-        self.popup.children[0].children[0].children[0].children[0].children[0].text = text
+        self.popup.children[0].children[0].children[0].children[0].children[1].text = text
 
     def extract_cards(self):
         extractdialog = ExtractDialog()
@@ -195,7 +197,7 @@ class Extract(BoxLayout):
             chrome_options = webdriver.ChromeOptions()
             if int(config.get('Settings', 'hide_chrome_window')) == 1:
                 chrome_options.add_argument("--window-position=-10000,0")
-            browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
+            browser = CustomWebDriver(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
             self.extractdialog._browser = browser
 
         for msg_id, datetime_received, url, imap_username, to_address, phonenum in urls:
