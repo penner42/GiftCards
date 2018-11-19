@@ -20,6 +20,7 @@ class SaveDialog(FloatLayout):
     def get_path(self):
         return os.path.expanduser("~")
 
+
 class GiftCards(TabbedPanel):
     pass
 

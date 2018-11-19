@@ -1,5 +1,4 @@
 from selenium import webdriver
-import types
 
 
 class CustomWebDriver(webdriver.Chrome):
