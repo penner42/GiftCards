@@ -116,14 +116,26 @@ class NeweggExtractor(Extractor):
         try:
             card_code = browser.find_element_by_xpath('//*[@id="imgCertBarCode"]').get_attribute('src').split('CBID=')[1].split('&')[0]
         except NoSuchElementException:
-            card_code = browser.find_element_by_xpath('//*[@id="desktop"]/div[1]/div[2]/div[1]/div/div/div[1]/div[2]/div[3]/div/div').text.strip()
+            try:
+                card_code = browser.find_element_by_xpath('//*[@id="desktop"]/div[1]/div[2]/div[1]/div/div/div[1]/div[2]/div[3]/div/div').text.strip()
+            except NoSuchElementException:
+                try:
+                    datacert = json.loads(browser.find_element_by_id('ids-configuration').get_attribute('data-certificate'))
+                    card_code = datacert['CardNumber']
+                except (NoSuchElementException, TypeError, KeyError) as e:
+                    card_code = ''
+
         try:
             card_pin = browser.find_element_by_xpath('//*[@id="lblPin"]').text.strip()
         except NoSuchElementException:
             try:
-                card_pin = browser.find_element_by_xpath('//*[@id="desktop"]/div[1]/div[2]/div[1]/div/div/div[1]/div[2]/div[4]').text.split('PIN:')[1].strip()
-            except NoSuchElementException:
-                card_pin = ''
+                datacert = json.loads(browser.find_element_by_id('ids-configuration').get_attribute('data-certificate'))
+                card_pin = datacert['Pin']
+            except (NoSuchElementException, TypeError, KeyError) as e:
+                try:
+                    card_pin = browser.find_element_by_xpath('//*[@id="desktop"]/div[1]/div[2]/div[1]/div/div/div[1]/div[2]/div[4]').text.split('PIN:')[1].strip()
+                except NoSuchElementException:
+                    card_pin = ''
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
@@ -138,7 +150,7 @@ class PPDGExtractor(Extractor):
 
     @staticmethod
     def delay():
-        time.sleep(1)
+        time.sleep(3)
 
     @staticmethod
     def complete_challenge(browser, email, phonenum):
