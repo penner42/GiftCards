@@ -82,7 +82,9 @@ class ExtractFrame(tk.Frame):
         cards = {}
         urls = []
 
-        e = [x for x in extractors.extractors_list if x.name() == "Gift Card Mall"]
+        e = [extractors.extractors_list[i] for i, c in enumerate(self.checkboxes) if c.get()]
+        print(e[0].name())
+#        e = [x for x in extractors.extractors_list if x.name() == "Gift Card Mall"]
         if len(e) == 1:
             extractor = e[0]
         else:
@@ -179,6 +181,10 @@ class ExtractFrame(tk.Frame):
                     try:
                         browser.get(url)
                     except TimeoutException:
+                        self.update_progress('Page load timed out. Retrying...')
+                        continue
+                    # if page load times out, retry...
+                    if 'ERR_TIMED_OUT' in browser.page_source:
                         self.update_progress('Page load timed out. Retrying...')
                         continue
                     break

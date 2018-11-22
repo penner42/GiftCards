@@ -450,13 +450,21 @@ class GiftCardMallExtractor(Extractor):
     def fetch_codes(browser):
         # card store
         card_store = browser.find_element_by_id('productName').get_attribute('value')
-        try:
-            amt_text = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/h1').text
-            card_amount = re.search('.*?($\d*).*', amt_text).group(1)
-        except (AttributeError, NoSuchElementException):
-            card_amount = ''
+        card_amount = Extractor.find_element(browser,
+                                             [
+                                                 {'id': '//*[@id="main"]/div[1]/div[1]/h1',
+                                                  'postprocess': lambda s: re.search('.*?($\d*).*', s).group(1)},
+                                                 {'id': '//*[@id="main"]/div[1]/div[2]/h2'}
+                                             ],
+                                             'Unknown Amount')
 
-        card_code = browser.find_element_by_id('cardNumber').get_attribute('value')
+        card_code = Extractor.find_element(browser,
+                                          [
+                                              {'method': browser.find_element_by_id,
+                                               'id': 'cardNumber',
+                                               'postprocess': lambda s: s.get_attribute('value')}
+                                          ],
+                                          'Unknown Code')
         card_pin = browser.find_element_by_id('pinNumber').get_attribute('value')
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
@@ -487,13 +495,13 @@ class BestBuyExtractor(Extractor):
 
     @staticmethod
     def email():
-#        return "BestBuyInfo@emailinfo.bestbuy.com"
-        return "bestbuygiftcards@cashstar.com"
+        return "BestBuyInfo@emailinfo.bestbuy.com"
+        # return "bestbuygiftcards@cashstar.com"
 
-    @staticmethod
-    def subject():
-        return "E-Gift Card"
-
+#    @staticmethod
+#     def subject():
+#        return "E-Gift Card"
+#         return ""
     @staticmethod
     def fetch_payload(msg):
         return msg.get_payload(decode=True)

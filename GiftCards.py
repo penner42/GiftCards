@@ -12,7 +12,7 @@ class GiftCards(tk.Tk):
         self._settings = configparser.ConfigParser()
         self._settings.read('giftcards.ini')
 
-        self.title("tk.Notebook")
+        self.title("GiftCards")
 
         nb = tk.ttk.Notebook(self)
 
