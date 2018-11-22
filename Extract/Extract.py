@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import StringVar, IntVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE
+from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT
 from tkinter import Text, Label
 from Extract import extractors
 import queue
@@ -19,18 +19,49 @@ class ExtractFrame(tk.Frame):
         self._settings = self.winfo_toplevel().get_settings()
         self._queue = queue.Queue()
 
-        self.checkboxes = [IntVar() for e in extractors.extractors_list]
+        all_checked = BooleanVar()
+        Checkbutton(self, text='Gift Card Sources', variable=all_checked,
+                    command=lambda v=all_checked: self.check_all(v),
+                    borderwidth=2, relief='ridge',
+                    anchor=W).grid(row=1, columnspan=3, sticky=N+W+E+S)
+
+        active_sources = self._settings['Settings']['selected_source'].split(',')
+        self.checkboxes = [BooleanVar(name=extractors.extractors_list[count].name())
+                           for count in range(len(extractors.extractors_list))]
+        for i, c in enumerate(self.checkboxes):
+            c.set(extractors.extractors_list[i].name() in active_sources)
 
         choices = [e.name() for e in extractors.extractors_list]
         for i, e in enumerate(extractors.extractors_list):
-            Checkbutton(self, text=e.name(), variable=self.checkboxes[i]).grid(row=i, sticky=N+W)
-            text = Label(self, text='Only')
-            text.grid(row=i, column=2)
+            Checkbutton(self, text=e.name(),
+                        variable=self.checkboxes[i],
+                        command=lambda: self.save_sources()).grid(row=i+2, sticky=N+W)
+            text = Label(self, text='Only', fg='blue', cursor='hand2')
+            text.bind('<Button-1>', lambda f,i=i: self.check_only(i, all_checked))
+            text.grid(row=i+2, column=2)
 
         Button(self, text='Extract',
-               command=lambda: threading.Thread(target=self.extract).start()).grid(row=len(choices),
+               command=lambda: threading.Thread(target=self.extract).start()).grid(row=len(choices)+2,
                                                                                    sticky=N+W, pady=4)
         self.do_update()
+
+    def save_sources(self):
+        self._settings['Settings']['selected_source'] = ','.join([extractors.extractors_list[i].name()
+                                                                  for i, c in enumerate(self.checkboxes) if c.get()])
+        with open('giftcards.ini', 'w') as configfile:
+            self._settings.write(configfile)
+
+    def check_only(self, only, all_checked):
+        for i, c in enumerate(self.checkboxes):
+            c.set(i == only)
+        all_checked.set(False)
+        self.save_sources()
+
+    def check_all(self, value):
+        val = value.get()
+        for c in self.checkboxes:
+            c.set(val)
+        self.save_sources()
 
     def do_update(self):
         try:
@@ -51,7 +82,7 @@ class ExtractFrame(tk.Frame):
         cards = {}
         urls = []
 
-        e = [x for x in extractors.extractors_list if x.name() == "Samsung Pay"]
+        e = [x for x in extractors.extractors_list if x.name() == "Gift Card Mall"]
         if len(e) == 1:
             extractor = e[0]
         else:
@@ -181,8 +212,6 @@ class ExtractFrame(tk.Frame):
             cards[store] = sorted(cards[store], key=lambda k: k['datetime_received'])
             csv_output += store + "\r\n"
             for c in cards[store]:
-                # csv_output.text += "{},{},{},{},{},{}".format(
-                #     c['card_code'],c['card_pin'],c['card_amount'],c['card_store'],c['datetime_received'],c['url'])+"\r\n"
                 csv_output += "{},{},{}\r\n".format(
                     c['card_amount'], c['card_code'], c['card_pin'])
             csv_output += "\r\n"
