@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import email
 import threading
 from selenium.common.exceptions import TimeoutException
-
+import time
 
 class ExtractFrame(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
@@ -184,8 +184,9 @@ class ExtractFrame(tk.Frame):
                         self.update_progress('Page load timed out. Retrying...')
                         continue
                     # if page load times out, retry...
-                    if 'ERR_TIMED_OUT' in browser.page_source:
+                    if 'ERR_TIMED_OUT' in browser.page_source or 'com.bhn.general.service.error' in browser.page_source:
                         self.update_progress('Page load timed out. Retrying...')
+                        time.sleep(1)
                         continue
                     break
 
