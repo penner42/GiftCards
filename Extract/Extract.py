@@ -83,13 +83,17 @@ class ExtractFrame(tk.Frame):
         urls = []
 
         e = [extractors.extractors_list[i] for i, c in enumerate(self.checkboxes) if c.get()]
-        print(e[0].name())
-#        e = [x for x in extractors.extractors_list if x.name() == "Gift Card Mall"]
-        if len(e) == 1:
-            extractor = e[0]
-        else:
-            # TODO: show error about no card source selected
+        if len(e) == 0:
+            self.update_progress('No sources selected!')
             return
+        emails = [i for e_list in [x.email() for x in e] for i in e_list]
+        # print(e[0].name())
+#        e = [x for x in extractors.extractors_list if x.name() == "Gift Card Mall"]
+#         if len(e) == 1:
+#             extractor = e[0]
+#         else:
+#             # TODO: show error about no card source selected
+#             return
         days = int(config.get('Settings', 'days'))
         browser = None
         for section in ['Email1', 'Email2', 'Email3', 'Email4']:
@@ -113,10 +117,11 @@ class ExtractFrame(tk.Frame):
                 mailbox.login(imap_username, imap_password)
                 mailbox.select("INBOX")
                 since = (date.today() - timedelta(days - 1)).strftime("%d-%b-%Y")
-                subject = ' HEADER Subject "'+extractor.subject()+'" ' if extractor.subject() is not "" else " "
-                status, messages = mailbox.search(None,'(FROM {}{}SINCE "{}")'.format(extractor.email(),
-                                                                               subject,
-                                                                               since))
+                from_list = '(OR ' * (len(emails) - 1) + '(FROM "'+emails[0]+'") ' +''.join(['(FROM "'+em+'")) ' for em in emails[1:]])[0:-1]
+                # subject = ' HEADER Subject "'+extractor.subject()+'" ' if extractor.subject() is not "" else " "
+                search = '{} SINCE "{}"'.format(from_list, since)
+                # status, messages = mailbox.search(None, '(OR (OR (FROM "BestBuyInfo@emailinfo.bestbuy.com") (FROM "bestbuygiftcards@cashstar.com")) (FROM "asdf@amazon.com"))')
+                status, messages = mailbox.search(None, search)
 
                 if status == "OK":
                     # Convert the result list to an array of message IDs
@@ -140,10 +145,15 @@ class ExtractFrame(tk.Frame):
 
                     if status == "OK":
                         for idx, msg in enumerate(data):
-                            # Get To: address for challenge completion
-                            to_address = msg.get("To", imap_username)
+                            # Get To: and From: addresses
+                            to_address = email.utils.parseaddr(msg.get("To", imap_username))[1]
+                            from_address = email.utils.parseaddr(msg.get("From"))[1]
+                            # Get extractor
+                            extractor = [ext for ext in extractors.extractors_list if from_address in ext.email()][0]
                             # Get the HTML body payload
                             msg_html = extractor.fetch_payload(msg)
+                            if msg_html is None:
+                                continue
                             # Save the email timestamp
                             datetime_received = datetime.fromtimestamp(
                                 email.utils.mktime_tz(email.utils.parsedate_tz(msg.get('date'))))
@@ -155,10 +165,10 @@ class ExtractFrame(tk.Frame):
                             if url is not None:
                                 if isinstance(url, list):
                                     for u in url:
-                                        urls.append([messages[idx],
+                                        urls.append([messages[idx], extractor,
                                                      datetime_received, u, imap_username, to_address, phonenum])
                                 else:
-                                    urls.append([messages[idx],
+                                    urls.append([messages[idx], extractor,
                                                  datetime_received, url, imap_username, to_address, phonenum])
         # if len(urls) < 1:
         #     self.popup.dismiss()
@@ -172,7 +182,7 @@ class ExtractFrame(tk.Frame):
             browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
             # self.extractdialog._browser = browser
 
-        for msg_id, datetime_received, url, imap_username, to_address, phonenum in urls:
+        for msg_id, extractor, datetime_received, url, imap_username, to_address, phonenum in urls:
             self.update_progress("{}\n     Getting gift card from message id: {}".format(imap_username, msg_id))
             while True:
                 # keep retrying to load the page if it's timing out.

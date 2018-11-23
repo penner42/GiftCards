@@ -40,7 +40,7 @@ class StaplesExtractor(Extractor):
 
     @staticmethod
     def email():
-        return "DoNotReply.Staples@blackhawk-net.com"
+        return ['DoNotReply.Staples@blackhawk-net.com']
 
     @staticmethod
     def fetch_payload(msg):
@@ -79,7 +79,7 @@ class NeweggExtractor(Extractor):
 
     @staticmethod
     def email():
-        return "info@newegg.com"
+        return ['info@newegg.com']
 
     @staticmethod
     def fetch_payload(msg):
@@ -146,7 +146,7 @@ class PPDGExtractor(Extractor):
 
     @staticmethod
     def email():
-        return "gifts@paypal.com"
+        return ['gifts@paypal.com']
 
     @staticmethod
     def delay():
@@ -206,7 +206,7 @@ class CashstarExtractor(Extractor):
 
     @staticmethod
     def email():
-        return "cashstar.com"
+        return ['cashstar.com']
 
     @staticmethod
     def fetch_payload(msg):
@@ -291,7 +291,7 @@ class SamsungPayExtractor(Extractor):
 
     @staticmethod
     def email():
-        return "no-reply@samsungpay.com"
+        return ['no-reply@samsungpay.com']
 
     @staticmethod
     def fetch_payload(msg):
@@ -379,7 +379,7 @@ class AmazonExtractor(Extractor):
 
     @staticmethod
     def email():
-        return "gc-orders@gc.email.amazon.com"
+        return ['gc-orders@gc.email.amazon.com']
 
     @staticmethod
     def fetch_payload(msg):
@@ -426,8 +426,7 @@ class GiftCardMallExtractor(Extractor):
 
     @staticmethod
     def email():
-#        return "gcm-support@giftcardmall.com"
-        return "customerservice@giftcardmall.com"
+       return ['gcm-support@giftcardmall.com', 'customerservice@giftcardmall.com']
 
     @staticmethod
     def fetch_payload(msg):
@@ -495,8 +494,7 @@ class BestBuyExtractor(Extractor):
 
     @staticmethod
     def email():
-        return "BestBuyInfo@emailinfo.bestbuy.com"
-        # return "bestbuygiftcards@cashstar.com"
+        return ['BestBuyInfo@emailinfo.bestbuy.com', 'bestbuygiftcards@cashstar.com']
 
 #    @staticmethod
 #     def subject():
@@ -549,7 +547,7 @@ class MyGiftCardsPlusExtractor(Extractor):
 
     @staticmethod
     def email():
-        return "ClientCareMGC@mygiftcardsplus.com"
+        return ['ClientCareMGC@mygiftcardsplus.com']
 
     @staticmethod
     def fetch_payload(msg):
