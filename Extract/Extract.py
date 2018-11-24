@@ -159,7 +159,7 @@ class ExtractFrame(tk.Frame):
                     except IMAP4.error:
                         # Can't fetch all messages at once, do them one at a time
                         for msg_id in messages:
-                            self.update_progress("{}:\n     Fetching message id {}...".format(imap_username, msg_id))
+                            self.update_progress("{}: Fetching message id {}...".format(imap_username, msg_id))
                             # Fetch it from the server
                             status, m = mailbox.fetch(msg_id, '(RFC822)')
                             if status == "OK":
@@ -205,7 +205,7 @@ class ExtractFrame(tk.Frame):
             # self.extractdialog._browser = browser
 
         for msg_id, extractor, datetime_received, url, imap_username, to_address, phonenum in urls:
-            self.update_progress("{}\n     Getting gift card from message id: {}".format(imap_username, msg_id))
+            self.update_progress("{}: Getting gift card from message id: {}".format(imap_username, msg_id))
             while True:
                 # keep retrying to load the page if it's timing out.
                 # TODO add cancel option
