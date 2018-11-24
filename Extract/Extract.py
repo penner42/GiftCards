@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT, TOP
+from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT, TOP, INSERT
 from tkinter import Text, Label
 from Extract import extractors
 import queue
@@ -20,7 +20,8 @@ class ExtractFrame(tk.Frame):
         right_frame = tk.Frame(self)
         left_frame.columnconfigure(0, weight=1)
         right_frame.columnconfigure(1, weight=3)
-        ScrolledText(right_frame).pack(expand=1, fill="both")
+        self.progress_text = ScrolledText(right_frame)
+        self.progress_text.pack(expand=1, fill="both")
 
         # get settings
         self._settings = self.winfo_toplevel().get_settings()
@@ -78,7 +79,7 @@ class ExtractFrame(tk.Frame):
         try:
             while True:
                 line = self._queue.get_nowait()
-                print(line)
+                self.progress_text.insert(INSERT, line+'\n')
         except queue.Empty:
             pass
         self.after(100, self.do_update)
