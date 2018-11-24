@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT
+from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT, TOP
 from tkinter import Text, Label
 from Extract import extractors
 import queue
@@ -9,17 +9,25 @@ from selenium import webdriver
 from bs4 import BeautifulSoup
 import email, threading, os
 from selenium.common.exceptions import TimeoutException
+from tkinter.scrolledtext import ScrolledText
 import time
 
 class ExtractFrame(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+
+        left_frame = tk.Frame(self)
+        right_frame = tk.Frame(self)
+        left_frame.columnconfigure(0, weight=1)
+        right_frame.columnconfigure(1, weight=3)
+        ScrolledText(right_frame).pack(expand=1, fill="both")
+
         # get settings
         self._settings = self.winfo_toplevel().get_settings()
         self._queue = queue.Queue()
 
         all_checked = BooleanVar()
-        Checkbutton(self, text='Gift Card Sources', variable=all_checked,
+        Checkbutton(left_frame, text='Gift Card Sources', variable=all_checked,
                     command=lambda v=all_checked: self.check_all(v),
                     borderwidth=2, relief='ridge',
                     anchor=W).grid(row=1, columnspan=3, sticky=N+W+E+S)
@@ -32,16 +40,20 @@ class ExtractFrame(tk.Frame):
 
         choices = [e.name() for e in extractors.extractors_list]
         for i, e in enumerate(extractors.extractors_list):
-            Checkbutton(self, text=e.name(),
+            Checkbutton(left_frame, text=e.name(),
                         variable=self.checkboxes[i],
                         command=lambda: self.save_sources()).grid(row=i+2, sticky=N+W)
-            text = Label(self, text='Only', fg='blue', cursor='hand2')
+            text = Label(left_frame, text='Only', fg='blue', cursor='hand2')
             text.bind('<Button-1>', lambda f,i=i: self.check_only(i, all_checked))
             text.grid(row=i+2, column=2)
 
-        Button(self, text='Extract',
+        Button(left_frame, text='Extract',
                command=lambda: threading.Thread(target=self.extract).start()).grid(row=len(choices)+2,
                                                                                    sticky=N+W, pady=4)
+        # left_frame.grid(row=0, column=0, sticky=N+W+E+S)
+        # right_frame.grid(row=0, column=1, sticky=N+W+E+S)
+        left_frame.pack(side=LEFT, anchor=N+W)
+        right_frame.pack(side=LEFT, expand=1, fill="both")
         self.do_update()
 
     def save_sources(self):
@@ -179,9 +191,9 @@ class ExtractFrame(tk.Frame):
                                 else:
                                     urls.append([messages[idx], extractor,
                                                  datetime_received, url, imap_username, to_address, phonenum])
-        # if len(urls) < 1:
-        #     self.popup.dismiss()
-        #     return
+        if len(urls) < 1:
+            self.update_progress('No cards to extract!')
+            return
 
         if browser is None:
             self.update_progress("Launching ChromeDriver...")
