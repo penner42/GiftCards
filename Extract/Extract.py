@@ -7,8 +7,7 @@ from imaplib import IMAP4, IMAP4_SSL
 from datetime import datetime, timedelta, date
 from selenium import webdriver
 from bs4 import BeautifulSoup
-import email
-import threading
+import email, threading, os
 from selenium.common.exceptions import TimeoutException
 import time
 
@@ -72,6 +71,13 @@ class ExtractFrame(tk.Frame):
             pass
         self.after(100, self.do_update)
 
+    def save_screenshot(self, browser, card_number):
+        screenshots_dir = os.path.join(os.getcwd(), 'screenshots')
+        if not os.path.exists(screenshots_dir):
+            os.makedirs(screenshots_dir)
+
+        browser.save_screenshot(os.path.join(screenshots_dir, card_number + '.png'))
+
     def update_progress(self, text):
         self._queue.put_nowait(text)
 
@@ -117,10 +123,13 @@ class ExtractFrame(tk.Frame):
                 mailbox.login(imap_username, imap_password)
                 mailbox.select("INBOX")
                 since = (date.today() - timedelta(days - 1)).strftime("%d-%b-%Y")
-                from_list = '(OR ' * (len(emails) - 1) + '(FROM "'+emails[0]+'") ' +''.join(['(FROM "'+em+'")) ' for em in emails[1:]])[0:-1]
+                from_list = '(OR ' * (len(emails) - 1) + '(FROM "'+emails[0]+'") ' +\
+                            ''.join(['(FROM "'+em+'")) ' for em in emails[1:]])[0:-1]
                 # subject = ' HEADER Subject "'+extractor.subject()+'" ' if extractor.subject() is not "" else " "
-                search = '{} SINCE "{}"'.format(from_list, since)
+                space = ' ' if len(emails) > 1 else ''
+                search = '({}{}SINCE "{}")'.format(from_list, space, since)
                 # status, messages = mailbox.search(None, '(OR (OR (FROM "BestBuyInfo@emailinfo.bestbuy.com") (FROM "bestbuygiftcards@cashstar.com")) (FROM "asdf@amazon.com"))')
+                # search = '(FROM "gc-orders@gc.email.amazon.com") SINCE "23-Nov-2018"'
                 status, messages = mailbox.search(None, search)
 
                 if status == "OK":
@@ -217,8 +226,8 @@ class ExtractFrame(tk.Frame):
                 card['datetime_received'] = str(datetime_received)
                 card['url'] = url
                 cards[card['card_store']].append(card)
-                # if int(config.get('Settings', 'screenshots')) == 1:
-                #     self.save_screenshot(browser, card['card_code'])
+                if int(config.get('Settings', 'screenshots')) == 1:
+                    self.save_screenshot(browser, card['card_code'])
                 # if self.ids.prints.active:
                 #     browser.execute_script('window.print()')
                 extractor.delay()

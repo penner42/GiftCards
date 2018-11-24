@@ -28,6 +28,8 @@ class Extractor:
             exception = l.get('exception', NoSuchElementException)
             try:
                 return_value = postprocess(func(locator))
+                if return_value == '':
+                    continue
                 break
             except exception:
                 pass
@@ -394,28 +396,58 @@ class AmazonExtractor(Extractor):
     @staticmethod
     def fetch_codes(browser):
         # card store
-        card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
-        if card_store == "":
-            card_store = browser.find_element_by_xpath('//*[@id="main"]/h1/strong').text.strip()
+        card_store = Extractor.find_element(browser,
+                                            [
+                                                {'id': '//*[@id="main"]/div[1]/div[1]/img',
+                                                 'postprocess': lambda s: s.get_attribute('alt')},
+                                                {'id': '//*[@id="main"]/h1/strong'},
+                                                {'id': '/html/head/title',
+                                                 'postprocess': lambda s: s.get_attribute('innerHTML')}
+                                            ],
+                                            'Unknown Store')
+        #
+        # card_store = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[1]/img').get_attribute("alt")
+        # if card_store == "":
+        #     card_store = browser.find_element_by_xpath('//*[@id="main"]/h1/strong').text.strip()
 
         # Get the card amount
-        try:
-            card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
-        except NoSuchElementException:
-            card_amount = browser.find_element_by_id("amount").text.strip()
+        card_amount = Extractor.find_element(browser,
+                                             [
+                                                 {'id': '//*[@id="main"]/div[1]/div[2]/h2'},
+                                                 {'method': browser.find_element_by_id,
+                                                  'id': 'amount'},
+                                                 {'id': '//*[@id="main"]/div[2]/div/p[2]',
+                                                  'postprocess': lambda s: re.search('.*?(\$\d*).*',
+                                                                                     s.text.strip()).group(1)},
+
+                                             ],
+                                             'Unknown Amount')
+        # try:
+        #     card_amount = browser.find_element_by_xpath('//*[@id="main"]/div[1]/div[2]/h2').text.strip()
+        # except NoSuchElementException:
+        #     card_amount = browser.find_element_by_id("amount").text.strip()
 
         # Get the card number
-        card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
-        try:
-            card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
-        except NoSuchElementException:
-            card_pin = ''
-
+        card_code = Extractor.find_element(browser,
+                                           [
+                                               {'id': '//*[@id="cardNumber2"]'},
+                                               {'id': '//*[@id="redeem"]'}
+                                           ],'Unknown Code')
+        #
+        # card_code = browser.find_element_by_xpath('//*[@id="cardNumber2"]').text.strip()
+        card_pin = Extractor.find_element(browser, [{'id': '//*[@id="main"]/div[2]/div[2]/p[2]/span'}], '')
         if card_pin == card_code:
-            try:
-                card_pin = browser.find_element_by_xpath('//*[@id="claimCode"]').text.strip()
-            except NoSuchElementException:
-                pass
+            card_pin = Extractor.find_element(browser, [{'id': '//*[@id="claimCode"]'}], '')
+        # try:
+        #     card_pin = browser.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/p[2]/span').text.strip()
+        # except NoSuchElementException:
+        #     card_pin = ''
+
+        # if card_pin == card_code:
+        #     try:
+        #         card_pin = browser.find_element_by_xpath('//*[@id="claimCode"]').text.strip()
+        #     except NoSuchElementException:
+        #         pass
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
@@ -452,7 +484,7 @@ class GiftCardMallExtractor(Extractor):
         card_amount = Extractor.find_element(browser,
                                              [
                                                  {'id': '//*[@id="main"]/div[1]/div[1]/h1',
-                                                  'postprocess': lambda s: re.search('.*?($\d*).*', s).group(1)},
+                                                  'postprocess': lambda s: re.search('.*?(\$\d*).*', s).group(1)},
                                                  {'id': '//*[@id="main"]/div[1]/div[2]/h2'}
                                              ],
                                              'Unknown Amount')
