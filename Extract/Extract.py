@@ -1,6 +1,6 @@
-import tkinter as tk
-from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT, TOP, INSERT
-from tkinter import Text, Label
+#import tkinter as tk
+# from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT, TOP, END
+# from tkinter import Text, Label
 from Extract import extractors
 import queue
 from imaplib import IMAP4, IMAP4_SSL
@@ -11,27 +11,45 @@ import email, threading, os
 from selenium.common.exceptions import TimeoutException
 from tkinter.scrolledtext import ScrolledText
 import time
+from tkinter import *
+from tkinter.ttk import *
 
-class ExtractFrame(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
-        super().__init__(parent, *args, **kwargs)
 
-        left_frame = tk.Frame(self)
-        right_frame = tk.Frame(self)
+class ExtractFrame(Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        left_frame = Frame(self)
         left_frame.columnconfigure(0, weight=1)
-        right_frame.columnconfigure(1, weight=3)
-        self.progress_text = ScrolledText(right_frame)
-        self.progress_text.pack(expand=1, fill="both")
+
+        right_pane = Panedwindow(self)
+
+        self.output_text = ScrolledText(right_pane)
+        right_pane.add(self.output_text)
+
+        progress_frame = Frame(right_pane, style='Progress.TFrame')
+        progress_frame.columnconfigure(0, weight=1)
+        progress_frame.rowconfigure(1, weight=1)
+
+        self.progress_label = Label(progress_frame, text='Progress', anchor=W)
+        self.progress_label.grid(row=0, sticky=W)
+
+        self.progress_text = ScrolledText(progress_frame, bg='#F0F0F0', height=10, borderwidth=2, relief='groove')
+        self.progress_text.config(state='disabled')
+        self.progress_text.grid(row=1, sticky=N+E+W+S)
+
+        right_pane.add(progress_frame)
 
         # get settings
         self._settings = self.winfo_toplevel().get_settings()
         self._queue = queue.Queue()
 
         all_checked = BooleanVar()
-        Checkbutton(left_frame, text='Gift Card Sources', variable=all_checked,
-                    command=lambda v=all_checked: self.check_all(v),
-                    borderwidth=2, relief='ridge',
-                    anchor=W).grid(row=1, columnspan=3, sticky=N+W+E+S)
+        left_frame_checkboxes = Frame(left_frame, borderwidth=2, relief='groove')
+        Checkbutton(left_frame_checkboxes, text='Gift Card Sources', variable=all_checked,
+                    command=lambda v=all_checked: self.check_all(v)).grid(row=0, columnspan=3, sticky=N+W+E+S)
+
+        Separator(left_frame_checkboxes, orient=HORIZONTAL).grid(row=1, columnspan=3, sticky=EW)
 
         active_sources = self._settings['Settings']['selected_source'].split(',')
         self.checkboxes = [BooleanVar(name=extractors.extractors_list[count].name())
@@ -41,20 +59,20 @@ class ExtractFrame(tk.Frame):
 
         choices = [e.name() for e in extractors.extractors_list]
         for i, e in enumerate(extractors.extractors_list):
-            Checkbutton(left_frame, text=e.name(),
+            Checkbutton(left_frame_checkboxes, text=e.name(),
                         variable=self.checkboxes[i],
                         command=lambda: self.save_sources()).grid(row=i+2, sticky=N+W)
-            text = Label(left_frame, text='Only', fg='blue', cursor='hand2')
+            text = Label(left_frame_checkboxes, text='Only', style='Link.TLabel', cursor='hand2')
             text.bind('<Button-1>', lambda f,i=i: self.check_only(i, all_checked))
             text.grid(row=i+2, column=2)
 
-        Button(left_frame, text='Extract',
-               command=lambda: threading.Thread(target=self.extract).start()).grid(row=len(choices)+2,
-                                                                                   sticky=N+W, pady=4)
-        # left_frame.grid(row=0, column=0, sticky=N+W+E+S)
-        # right_frame.grid(row=0, column=1, sticky=N+W+E+S)
-        left_frame.pack(side=LEFT, anchor=N+W)
-        right_frame.pack(side=LEFT, expand=1, fill="both")
+        left_frame_checkboxes.grid(row=0)
+        Button(left_frame, text='Extract', style='Extract.TButton',
+               command=lambda: threading.Thread(target=self.extract).start()).grid(row=1,sticky=N+E+W+S, pady=1)
+        Button(left_frame, text='Cancel',
+               command=lambda: threading.Thread(target=self.extract).start()).grid(row=2,sticky=N+E+W+S)
+        left_frame.pack(side=LEFT, anchor=N+W, padx=5, pady=5)
+        right_pane.pack(side=LEFT, expand=1, fill="both")
         self.do_update()
 
     def save_sources(self):
@@ -79,7 +97,10 @@ class ExtractFrame(tk.Frame):
         try:
             while True:
                 line = self._queue.get_nowait()
-                self.progress_text.insert(INSERT, line+'\n')
+                self.progress_text.config(state='normal')
+                self.progress_text.insert("end-1c", line+'\n')
+                self.progress_text.config(state='disabled')
+                self.progress_text.see(END)
         except queue.Empty:
             pass
         self.after(100, self.do_update)

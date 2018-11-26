@@ -1,34 +1,38 @@
-from tkinter import ttk
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 from Extract.Extract import ExtractFrame
 import configparser
-from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE
+from tkinter import *
+from tkinter.ttk import *
 
-
-class GiftCards(tk.Tk):
+class GiftCards(Tk):
     def __init__(self):
         super().__init__()
         self._settings = configparser.ConfigParser()
         self._settings.read('giftcards.ini')
-
         self.title("GiftCards")
 
-        nb = tk.ttk.Notebook(self)
+        s = Style()
+        s.configure('Link.TLabel', foreground='blue')
+        s.configure('Extract.TButton', foreground='green', background='green')
+        s.configure('Sash', sashthickness=10, sashrelief=RAISED, handlesize=100)
+        s.configure('Progress.TFrame')
+
+        nb = Notebook(self)
 
         page1 = ExtractFrame(nb)
 
         # second page
-        page2 = tk.Frame(nb)
+        page2 = Frame(nb)
         text = ScrolledText(page2)
         text.pack(expand=1, fill="both")
 
         # second page
-        page3 = tk.Frame(nb)
+        page3 = Frame(nb)
         text = ScrolledText(page3)
         text.pack(expand=1, fill="both")
 
-        page4 = tk.Frame(nb)
+        page4 = Frame(nb)
         text = ScrolledText(page4)
         text.pack(expand=1, fill="both")
 
