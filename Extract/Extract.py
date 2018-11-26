@@ -19,6 +19,8 @@ class ExtractFrame(Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.extract_thread = None
+
         left_frame = Frame(self)
         left_frame.columnconfigure(0, weight=1)
 
@@ -43,6 +45,7 @@ class ExtractFrame(Frame):
         # get settings
         self._settings = self.winfo_toplevel().get_settings()
         self._queue = queue.Queue()
+        self._kill_queue = queue.Queue()
 
         all_checked = BooleanVar()
         left_frame_checkboxes = Frame(left_frame, borderwidth=2, relief='groove')
@@ -68,9 +71,9 @@ class ExtractFrame(Frame):
 
         left_frame_checkboxes.grid(row=0)
         Button(left_frame, text='Extract', style='Extract.TButton',
-               command=lambda: threading.Thread(target=self.extract).start()).grid(row=1,sticky=N+E+W+S, pady=1)
+               command=self.extract).grid(row=1,sticky=N+E+W+S, pady=1)
         Button(left_frame, text='Cancel',
-               command=lambda: threading.Thread(target=self.extract).start()).grid(row=2,sticky=N+E+W+S)
+               command=self.cancel).grid(row=2,sticky=N+E+W+S)
         left_frame.pack(side=LEFT, anchor=N+W, padx=5, pady=5)
         right_pane.pack(side=LEFT, expand=1, fill="both")
         self.do_update()
@@ -97,10 +100,15 @@ class ExtractFrame(Frame):
         try:
             while True:
                 line = self._queue.get_nowait()
-                self.progress_text.config(state='normal')
-                self.progress_text.insert("end-1c", line+'\n')
-                self.progress_text.config(state='disabled')
-                self.progress_text.see(END)
+                if line.startswith('CARDOUTPUT'):
+                    line = line[10:]
+                    self.output_text.delete(1.0, END)
+                    self.output_text.insert(INSERT, line)
+                else:
+                    self.progress_text.config(state='normal')
+                    self.progress_text.insert("end-1c", line+'\n')
+                    self.progress_text.config(state='disabled')
+                    self.progress_text.see(END)
         except queue.Empty:
             pass
         self.after(100, self.do_update)
@@ -113,9 +121,40 @@ class ExtractFrame(Frame):
         browser.save_screenshot(os.path.join(screenshots_dir, card_number + '.png'))
 
     def update_progress(self, text):
+        # check kill queue to see if we should stop
+        try:
+            line = self._kill_queue.get_nowait()
+            if self.browser:
+                self.browser.close()
+            self._queue.put_nowait('Extraction canceled.')
+            exit()
+        except queue.Empty:
+            pass
         self._queue.put_nowait(text)
 
+    def cancel(self):
+        self.update_progress('Cancelling...')
+        if self.extract_thread:
+            self._kill_queue.put_nowait('DIE')
+
     def extract(self):
+        self.extract_thread = threading.Thread(target=self.extract_real)
+        self.extract_thread.start()
+
+    def output_cards(self, cards):
+        csv_output = 'CARDOUTPUT'
+        for store in cards:
+            # sort by time received
+            cards[store] = sorted(cards[store], key=lambda k: k['datetime_received'])
+            csv_output += store + "\r\n"
+            for c in cards[store]:
+                csv_output += "{},{},{}\r\n".format(
+                    c['card_amount'], c['card_code'], c['card_pin'])
+            csv_output += "\r\n"
+
+        self.update_progress(csv_output)
+
+    def extract_real(self):
         config = self._settings
         extractor = None
         self.update_progress("Initializing...")
@@ -136,6 +175,7 @@ class ExtractFrame(Frame):
 #             return
         days = int(config.get('Settings', 'days'))
         browser = None
+        self.browser = None
         for section in ['Email1', 'Email2', 'Email3', 'Email4']:
             if int(config.get(section, 'imap_active')) == 1:
                 imap_ssl = int(config.get(section, 'imap_ssl')) == 1
@@ -223,6 +263,7 @@ class ExtractFrame(Frame):
             if int(config.get('Settings', 'hide_chrome_window')) == 1:
                 chrome_options.add_argument("--window-position=-10000,0")
             browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
+            self.browser = browser # TODO make it all self.browser
             # self.extractdialog._browser = browser
 
         for msg_id, extractor, datetime_received, url, imap_username, to_address, phonenum in urls:
@@ -266,16 +307,7 @@ class ExtractFrame(Frame):
                 #     browser.execute_script('window.print()')
                 extractor.delay()
 
-        csv_output = ''
-        for store in cards:
-            # sort by time received
-            cards[store] = sorted(cards[store], key=lambda k: k['datetime_received'])
-            csv_output += store + "\r\n"
-            for c in cards[store]:
-                csv_output += "{},{},{}\r\n".format(
-                    c['card_amount'], c['card_code'], c['card_pin'])
-            csv_output += "\r\n"
-        
-        self.update_progress(csv_output)
-        
+                # update output window for each new card
+                self.output_cards(cards)
+
         browser.close()
