@@ -14,10 +14,13 @@ class Barcode(BoxLayout):
 
     def detect(self, pin, code):
         # kohl's. others?
+        code = code.replace('%B', '')
+
         if len(code) == 30:
             code = code[-19:]
         # cabela's
         elif re.search("^\d{10}[a-zA-Z]{6}$", code):
+
             pin = code[-6:]
             code = code[:9]
         elif len(code) != 19 and len(code) != 16:
