@@ -24,10 +24,18 @@ class ExtractFrame(Frame):
         left_frame = Frame(self)
         left_frame.columnconfigure(0, weight=1)
 
-        right_pane = Panedwindow(self)
+        right_pane = Frame(self)
 
-        self.output_text = ScrolledText(right_pane)
-        right_pane.add(self.output_text)
+        output_frame = Frame(right_pane, style='Progress.TFrame')
+        output_frame.columnconfigure(0, weight=1)
+        output_frame.rowconfigure(1, weight=1)
+        self.output_label = Label(output_frame, text='Card Output', anchor=W)
+        self.output_label.grid(row=0, sticky=W)
+
+        self.output_text = ScrolledText(output_frame, bg='#F0F0F0', height=10, borderwidth=2, relief=GROOVE)
+        self.output_text.config(state=DISABLED)
+        self.output_text.grid(row=1, sticky=N+E+W+S)
+        # right_pane.add(output_frame)
 
         progress_frame = Frame(right_pane, style='Progress.TFrame')
         progress_frame.columnconfigure(0, weight=1)
@@ -36,21 +44,24 @@ class ExtractFrame(Frame):
         self.progress_label = Label(progress_frame, text='Progress', anchor=W)
         self.progress_label.grid(row=0, sticky=W)
 
-        self.progress_text = ScrolledText(progress_frame, bg='#F0F0F0', height=10, borderwidth=2, relief='groove')
-        self.progress_text.config(state='disabled')
+        self.progress_text = ScrolledText(progress_frame, bg='#F0F0F0', height=10, borderwidth=2, relief=GROOVE)
+        self.progress_text.config(state=DISABLED)
         self.progress_text.grid(row=1, sticky=N+E+W+S)
 
-        right_pane.add(progress_frame)
+        # right_pane.add(progress_frame)
+        output_frame.pack(expand=1, fill="both")
+        progress_frame.pack(expand=1, fill="both")
 
         # get settings
         self._settings = self.winfo_toplevel().get_settings()
         self._queue = queue.Queue()
         self._kill_queue = queue.Queue()
-
+        self.checkbox_widgets = []
         all_checked = BooleanVar()
         left_frame_checkboxes = Frame(left_frame, borderwidth=2, relief='groove')
-        Checkbutton(left_frame_checkboxes, text='Gift Card Sources', variable=all_checked,
-                    command=lambda v=all_checked: self.check_all(v)).grid(row=0, columnspan=3, sticky=N+W+E+S)
+        self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text='Gift Card Sources', variable=all_checked,
+                                                 command=lambda v=all_checked: self.check_all(v)))
+        self.checkbox_widgets[-1].grid(row=0, columnspan=3, sticky=N+W+E+S)
 
         Separator(left_frame_checkboxes, orient=HORIZONTAL).grid(row=1, columnspan=3, sticky=EW)
 
@@ -62,9 +73,10 @@ class ExtractFrame(Frame):
 
         choices = [e.name() for e in extractors.extractors_list]
         for i, e in enumerate(extractors.extractors_list):
-            Checkbutton(left_frame_checkboxes, text=e.name(),
-                        variable=self.checkboxes[i],
-                        command=lambda: self.save_sources()).grid(row=i+2, sticky=N+W)
+            self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text=e.name(),
+                                                     variable=self.checkboxes[i],
+                                                     command=lambda: self.save_sources()))
+            self.checkbox_widgets[-1].grid(row=i+2, sticky=N+W)
             text = Label(left_frame_checkboxes, text='Only', style='Link.TLabel', cursor='hand2')
             text.bind('<Button-1>', lambda f,i=i: self.check_only(i, all_checked))
             text.grid(row=i+2, column=2)
@@ -102,8 +114,10 @@ class ExtractFrame(Frame):
                 line = self._queue.get_nowait()
                 if line.startswith('CARDOUTPUT'):
                     line = line[10:]
+                    self.output_text.configure(state=NORMAL)
                     self.output_text.delete(1.0, END)
                     self.output_text.insert(INSERT, line)
+                    self.output_text.configure(state=DISABLED)
                 else:
                     self.progress_text.config(state='normal')
                     self.progress_text.insert("end-1c", line+'\n')
@@ -138,6 +152,10 @@ class ExtractFrame(Frame):
             self._kill_queue.put_nowait('DIE')
 
     def extract(self):
+        # disable GUI
+        for c in self.checkbox_widgets:
+            c.config(state=DISABLED)
+
         self.extract_thread = threading.Thread(target=self.extract_real)
         self.extract_thread.start()
 
@@ -166,13 +184,6 @@ class ExtractFrame(Frame):
             self.update_progress('No sources selected!')
             return
         emails = [i for e_list in [x.email() for x in e] for i in e_list]
-        # print(e[0].name())
-#        e = [x for x in extractors.extractors_list if x.name() == "Gift Card Mall"]
-#         if len(e) == 1:
-#             extractor = e[0]
-#         else:
-#             # TODO: show error about no card source selected
-#             return
         days = int(config.get('Settings', 'days'))
         browser = None
         self.browser = None
