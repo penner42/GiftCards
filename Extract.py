@@ -1,6 +1,3 @@
-#import tkinter as tk
-# from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT, TOP, END
-# from tkinter import Text, Label
 from extractors import *
 import queue
 from imaplib import IMAP4, IMAP4_SSL

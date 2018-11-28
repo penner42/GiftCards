@@ -1,7 +1,7 @@
-from tkinter.scrolledtext import ScrolledText
-from tkinter import *
-from tkinter.ttk import *
 import re
+from tkinter import *
+from tkinter.scrolledtext import ScrolledText
+from tkinter.ttk import *
 
 
 class BarcodeFrame(Frame):
