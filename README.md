@@ -11,3 +11,6 @@ Download or clone this repo and install
 [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/).
 Install the dependencies with `pip install -r requirements.txt`. Choose chromedriver location 
 and fill in email address information in Settings tab.
+
+#### Note:
+The old Kivy version is now in the kivy-archive branch, and will no longer be updated.
