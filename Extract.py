@@ -10,7 +10,7 @@ from tkinter.scrolledtext import ScrolledText
 import time
 from tkinter import *
 from tkinter.ttk import *
-
+from configparser import NoOptionError
 
 class ExtractFrame(Frame):
     def __init__(self, parent):
@@ -270,9 +270,14 @@ class ExtractFrame(Frame):
             chrome_options = webdriver.ChromeOptions()
             if int(config.get('Settings', 'hide_chrome_window')) == 1:
                 chrome_options.add_argument("--window-position=-10000,0")
+            try:
+                profile = config.get('Settings', 'profile')
+                chrome_options.add_argument('--user-data-dir={}'.format(profile))
+            except NoOptionError:
+                pass
+
             browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
             self.browser = browser # TODO make it all self.browser
-            # self.extractdialog._browser = browser
 
         for msg_id, extractor, datetime_received, url, imap_username, to_address, phonenum in urls:
             self.update_progress("{}: Getting gift card from message id: {}".format(imap_username, msg_id))
