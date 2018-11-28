@@ -53,3 +53,4 @@ class SwipeFrame(Frame):
             self.output_text.insert('end-1c', output_line)
             self.output_text.see(END)
             self.output_text.config(state=DISABLED)
+            self.swipe_field.delete(0, END)
