@@ -1,6 +1,7 @@
 from tkinter.scrolledtext import ScrolledText
 from Extract import ExtractFrame
 from Barcode import BarcodeFrame
+from Swipe import SwipeFrame
 import configparser
 from tkinter import *
 from tkinter.ttk import *
@@ -16,19 +17,14 @@ class GiftCards(Tk):
         s.configure('Link.TLabel', foreground='blue')
         s.configure('Extract.TButton', foreground='green', background='green')
         s.configure('Sash', sashthickness=10, sashrelief=RAISED, handlesize=100)
-        s.configure('Progress.TFrame')
+        s.configure('Progress.TFrame', minsize=200)
 
         nb = Notebook(self)
 
         page1 = ExtractFrame(nb)
-
-        # second page
+        page2 = SwipeFrame(nb)
         page3 = BarcodeFrame(nb)
 
-        # second page
-        page2 = Frame(nb)
-        text = ScrolledText(page2)
-        text.pack(expand=1, fill="both")
 
         page4 = Frame(nb)
         text = ScrolledText(page4)
