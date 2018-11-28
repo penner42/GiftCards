@@ -1,7 +1,7 @@
 #import tkinter as tk
 # from tkinter import StringVar, BooleanVar, Checkbutton, Button, N, E, W, S, DISABLED, ACTIVE, LEFT, TOP, END
 # from tkinter import Text, Label
-from Extract import extractors
+from extractors import *
 import queue
 from imaplib import IMAP4, IMAP4_SSL
 from datetime import datetime, timedelta, date
@@ -66,13 +66,13 @@ class ExtractFrame(Frame):
         Separator(left_frame_checkboxes, orient=HORIZONTAL).grid(row=1, columnspan=3, sticky=EW)
 
         active_sources = self._settings['Settings']['selected_source'].split(',')
-        self.checkboxes = [BooleanVar(name=extractors.extractors_list[count].name())
-                           for count in range(len(extractors.extractors_list))]
+        self.checkboxes = [BooleanVar(name=extractors_list[count].name())
+                           for count in range(len(extractors_list))]
         for i, c in enumerate(self.checkboxes):
-            c.set(extractors.extractors_list[i].name() in active_sources)
+            c.set(extractors_list[i].name() in active_sources)
 
-        choices = [e.name() for e in extractors.extractors_list]
-        for i, e in enumerate(extractors.extractors_list):
+        choices = [e.name() for e in extractors_list]
+        for i, e in enumerate(extractors_list):
             self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text=e.name(),
                                                      variable=self.checkboxes[i],
                                                      command=lambda: self.save_sources()))
@@ -91,7 +91,7 @@ class ExtractFrame(Frame):
         self.do_update()
 
     def save_sources(self):
-        self._settings['Settings']['selected_source'] = ','.join([extractors.extractors_list[i].name()
+        self._settings['Settings']['selected_source'] = ','.join([extractors_list[i].name()
                                                                   for i, c in enumerate(self.checkboxes) if c.get()])
         with open('giftcards.ini', 'w') as configfile:
             self._settings.write(configfile)
@@ -120,7 +120,7 @@ class ExtractFrame(Frame):
                     self.output_text.configure(state=DISABLED)
                 else:
                     self.progress_text.config(state='normal')
-                    self.progress_text.insert("end-1c", line+'\n')
+                    self.progress_text.insert('end-1c', line+'\n')
                     self.progress_text.config(state='disabled')
                     self.progress_text.see(END)
         except queue.Empty:
@@ -179,7 +179,7 @@ class ExtractFrame(Frame):
         cards = {}
         urls = []
 
-        e = [extractors.extractors_list[i] for i, c in enumerate(self.checkboxes) if c.get()]
+        e = [extractors_list[i] for i, c in enumerate(self.checkboxes) if c.get()]
         if len(e) == 0:
             self.update_progress('No sources selected!')
             return
@@ -243,7 +243,7 @@ class ExtractFrame(Frame):
                             to_address = email.utils.parseaddr(msg.get("To", imap_username))[1]
                             from_address = email.utils.parseaddr(msg.get("From"))[1]
                             # Get extractor
-                            extractor = [ext for ext in extractors.extractors_list if from_address in ext.email()][0]
+                            extractor = [ext for ext in extractors_list if from_address in ext.email()][0]
                             # Get the HTML body payload
                             msg_html = extractor.fetch_payload(msg)
                             if msg_html is None:

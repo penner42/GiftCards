@@ -1,6 +1,6 @@
-import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
-from Extract.Extract import ExtractFrame
+from Extract import ExtractFrame
+from Barcode import BarcodeFrame
 import configparser
 from tkinter import *
 from tkinter.ttk import *
@@ -23,13 +23,11 @@ class GiftCards(Tk):
         page1 = ExtractFrame(nb)
 
         # second page
-        page2 = Frame(nb)
-        text = ScrolledText(page2)
-        text.pack(expand=1, fill="both")
+        page3 = BarcodeFrame(nb)
 
         # second page
-        page3 = Frame(nb)
-        text = ScrolledText(page3)
+        page2 = Frame(nb)
+        text = ScrolledText(page2)
         text.pack(expand=1, fill="both")
 
         page4 = Frame(nb)
