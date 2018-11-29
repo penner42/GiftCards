@@ -8,14 +8,15 @@ class SwipeFrame(Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
         self.rowconfigure(4, weight=1)
 
         Separator(self, orient=HORIZONTAL).grid(row=0, columnspan=4, sticky=E+W, pady=5)
 
-        Label(self, text='Swipe Card:').grid(row=1, column=0, sticky=W)
-        self.swipe_field = EntryWithHintText(self)
-        self.swipe_field.grid(row=1, column=1, sticky=E+W)
+        # Label(self, text='Swipe Card:').grid(row=1, column=0, sticky=W)
+        self.swipe_field = EntryWithHintText(self,
+                                             hint="Type PIN, then swipe card. If there's no PIN, just swipe.")
+        self.swipe_field.grid(row=1, column=0, sticky=E+W)
         self.swipe_field.bind('<Return>', self.card_swiped)
 
         Separator(self, orient=HORIZONTAL).grid(row=2, columnspan=4, sticky=E+W, pady=5)

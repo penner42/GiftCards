@@ -2,34 +2,37 @@ import re
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import *
+from EntryWithHintText import EntryWithHintText
 
 
 class BarcodeFrame(Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.columnconfigure(3, weight=1)
+        self.columnconfigure(1, weight=1)
         self.rowconfigure(4, weight=1)
 
         Separator(self, orient=HORIZONTAL).grid(row=0, columnspan=4, sticky=E+W, pady=5)
 
-        Label(self, text='PIN:').grid(row=1, column=0, sticky=W)
-        self.pin_field = Entry(self, width=10)
-        self.pin_field.grid(row=1, column=1, sticky=W)
+        self.pin_field = EntryWithHintText(self, hint='Type PIN, hit enter', width=20)
+        self.pin_field.grid(row=1, column=0, sticky=W, padx=5)
         self.pin_field.bind('<Return>', self.pin_entered)
 
-        Label(self, text='Scan Barcode:').grid(row=1, column=2)
-        self.code_field = Entry(self)
-        self.code_field.grid(row=1, column=3, sticky=E+W)
+        self.code_field = EntryWithHintText(self, hint='Scan Barcode')
+        self.code_field.grid(row=1, column=1, sticky=E+W)
         self.code_field.bind('<Return>', self.code_entered)
 
-        Separator(self, orient=HORIZONTAL).grid(row=2, columnspan=4, sticky=E+W, pady=5)
+        note = " Note: If you set up your barcode scanner to prepend '%B' to scans, hitting enter after the PIN " \
+               "is not required."
+        Label(self, text=note).grid(row=2, columnspan=2, sticky=S+W, pady=5)
 
-        Label(self, text='Scan Output').grid(row=3)
+        Separator(self, orient=HORIZONTAL).grid(row=3, columnspan=4, sticky=E+W, pady=5)
+
+        Label(self, text='Scan Output').grid(row=4)
 
         self.output_text = ScrolledText(self, bg='#F0F0F0', borderwidth=2, relief=GROOVE)
         self.output_text.config(state=DISABLED)
-        self.output_text.grid(row=4, columnspan=4, sticky=N+E+W+S)
+        self.output_text.grid(row=5, columnspan=4, sticky=N+E+W+S)
 
     def pin_entered(self, event=None):
         if '%B' in self.pin_field.get():
