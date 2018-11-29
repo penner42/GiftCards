@@ -25,10 +25,9 @@ class GiftCards(Tk):
         page2 = SwipeFrame(nb)
         page3 = BarcodeFrame(nb)
 
-
         page4 = Frame(nb)
         text = ScrolledText(page4)
-        text.grid()
+        text.grid(sticky=N+E+W+S)
 
         nb.add(page1, text='Extract')
         nb.add(page2, text='Swipe')

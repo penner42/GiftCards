@@ -28,7 +28,7 @@ class BarcodeFrame(Frame):
 
         Separator(self, orient=HORIZONTAL).grid(row=3, columnspan=4, sticky=E+W, pady=5)
 
-        Label(self, text='Scan Output').grid(row=4)
+        Label(self, text='Scan Output', anchor=CENTER).grid(row=4, columnspan=4, sticky=E+W)
 
         self.output_text = ScrolledText(self, bg='#F0F0F0', borderwidth=2, relief=GROOVE)
         self.output_text.config(state=DISABLED)
