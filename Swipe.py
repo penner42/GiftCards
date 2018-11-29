@@ -2,7 +2,7 @@ import re
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import *
-
+from EntryWithHintText import EntryWithHintText
 
 class SwipeFrame(Frame):
     def __init__(self, parent):
@@ -14,7 +14,7 @@ class SwipeFrame(Frame):
         Separator(self, orient=HORIZONTAL).grid(row=0, columnspan=4, sticky=E+W, pady=5)
 
         Label(self, text='Swipe Card:').grid(row=1, column=0, sticky=W)
-        self.swipe_field = Entry(self)
+        self.swipe_field = EntryWithHintText(self)
         self.swipe_field.grid(row=1, column=1, sticky=E+W)
         self.swipe_field.bind('<Return>', self.card_swiped)
 
