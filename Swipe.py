@@ -13,9 +13,7 @@ class SwipeFrame(Frame):
 
         Separator(self, orient=HORIZONTAL).grid(row=0, columnspan=4, sticky=E+W, pady=5)
 
-        # Label(self, text='Swipe Card:').grid(row=1, column=0, sticky=W)
-        self.swipe_field = EntryWithHintText(self,
-                                             hint="Type PIN, then swipe card. If there's no PIN, just swipe.")
+        self.swipe_field = EntryWithHintText(self, hint="Type PIN, then swipe card. If there's no PIN, just swipe.")
         self.swipe_field.grid(row=1, column=0, sticky=E+W)
         self.swipe_field.bind('<Return>', self.card_swiped)
 

@@ -5,13 +5,42 @@ from Swipe import SwipeFrame
 import configparser
 from tkinter import *
 from tkinter.ttk import *
+import sys
+
 
 class GiftCards(Tk):
     def __init__(self):
         super().__init__()
+
+        self._path = '.'
+
+        if getattr(sys, 'frozen', False):
+            self._path = sys._MEIPASS
+
         self._settings = configparser.ConfigParser()
-        self._settings.read('giftcards.ini')
+        self._settings.setdefault('Settings',
+                                   {'chromedriver_path': '', 'days': 1, 'selected_source': '',
+                                    'hide_chrome_window': 1, 'screenshots': 0})
+        self._settings.setdefault('Email1',
+                                   {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
+                                    'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        self._settings.setdefault('Email2',
+                                   {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
+                                    'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        self._settings.setdefault('Email3',
+                                   {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
+                                    'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        self._settings.setdefault('Email4',
+                                   {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
+                                    'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        read_config = self._settings.read('giftcards.ini')
+        if len(read_config) == 0:
+            with open('giftcards.ini', 'w') as configfile:
+                self._settings.write(configfile)
+
         self.title("GiftCards")
+
+        self.iconbitmap(self._path+'/giftcards.ico')
 
         s = Style()
         s.configure('Link.TLabel', foreground='blue')

@@ -6,12 +6,13 @@ import threading
 class EntryWithHintText(Entry):
     def __init__(self, master=None, hint='Hint Text', hint_color='grey', **args):
         s = Style()
-        s.configure('EntryWithHintText.TEntry', foreground=hint_color, selectborderwidth=0,
+        self.style_name = str(id(self)) + 'EntryWithHintText.TEntry'
+        s.configure(self.style_name, foreground=hint_color, selectborderwidth=0,
                     selectforeground=hint_color,
-                    selectbackground=s.lookup('EntryWithHintText.TEntry', 'fieldbackground'))
+                    selectbackground=s.lookup(self.style_name, 'fieldbackground'))
         self.text = StringVar()
         self.modified = False
-        super().__init__(master, style='EntryWithHintText.TEntry', textvariable=self.text, **args)
+        super().__init__(master, style=self.style_name, textvariable=self.text, **args)
         self.hint = hint
         self.put_hint()
         self.bind('<Visibility>', self.visible)
@@ -30,7 +31,7 @@ class EntryWithHintText(Entry):
 
     def put_hint(self):
         self.modified = False
-        self.configure(style='EntryWithHintText.TEntry')
+        self.configure(style=self.style_name)
         self.delete(0, END)
         self.insert(0, self.hint)
         self.selection_range(0, 0)
