@@ -34,14 +34,13 @@ class SwipeFrame(Frame):
         else:
             pin, data = field_data.split("%B")
 
-        if data.count('?') != 2:
-            self.swipe_field.delete(0, END)
-            self.swipe_field.insert(INSERT, pin)
+        if data.count('?') != 2 or data.count('^') != 2:
+            self.swipe_field.delete(len(pin), END)
+            # self.swipe_field.insert(INSERT, pin)
         else:
             # card_no = self.detect(data)
             sec1, sec2, sec3 = data.split('^')
-            [t1, t2, t3] = [x.strip() for x in data.split('?')]
-
+            # [t1, t2, t3] = [x.strip() for x in data.split('?')]
             if len(sec1) != 19:
                 card_no = sec1[0] + sec3[14:16] + sec1[6:15] + sec3[16:20]
             else:

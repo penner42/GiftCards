@@ -2,6 +2,7 @@ from tkinter.scrolledtext import ScrolledText
 from Extract import ExtractFrame
 from Barcode import BarcodeFrame
 from Swipe import SwipeFrame
+from Settings import SettingsFrame
 import configparser
 from tkinter import *
 from tkinter.ttk import *
@@ -53,10 +54,7 @@ class GiftCards(Tk):
         page1 = ExtractFrame(nb)
         page2 = SwipeFrame(nb)
         page3 = BarcodeFrame(nb)
-
-        page4 = Frame(nb)
-        text = ScrolledText(page4)
-        text.grid(sticky=N+E+W+S)
+        page4 = SettingsFrame(nb)
 
         nb.add(page1, text='Extract')
         nb.add(page2, text='Swipe')

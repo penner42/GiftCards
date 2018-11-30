@@ -22,7 +22,14 @@ class EntryWithHintText(Entry):
         self.bind("<B1-Motion>", self.check_cursor)
         self.bind("<Left>", self.check_cursor)
         self.bind("<Right>", self.check_cursor)
-        self.text.trace('w', self.entry_changed)
+        self.trace_id = self.text.trace('w', self.entry_changed)
+        self.process_change = True
+
+    def insert(self, index, string):
+        self.process_change = False
+        self.delete(0, END)
+        super().insert(index, string)
+        self.process_change = True
 
     def check_cursor(self, *args):
         if not self.modified:
@@ -43,6 +50,9 @@ class EntryWithHintText(Entry):
             threading.Thread(target=lambda: self.icursor(0)).start()
 
     def entry_changed(self, *args):
+        if not self.process_change:
+            return
+
         if not self.modified:
             # if the user tried to delete something from the hint, fail
             if len(self.text.get()) < len(self.hint):
