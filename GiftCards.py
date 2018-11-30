@@ -34,10 +34,9 @@ class GiftCards(Tk):
         self._settings.setdefault('Email4',
                                    {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
                                     'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
-        read_config = self._settings.read('giftcards.ini')
-        if len(read_config) == 0:
-            with open('giftcards.ini', 'w') as configfile:
-                self._settings.write(configfile)
+
+        self._settings.read('giftcards.ini')
+        self.save_settings()
 
         self.title("GiftCards")
 
@@ -63,6 +62,10 @@ class GiftCards(Tk):
         nb.grid(column=0, row=0, sticky=N+S+E+W)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
+
+    def save_settings(self):
+        with open('giftcards.ini', 'w') as configfile:
+            self._settings.write(configfile)
 
     def get_settings(self):
         return self._settings

@@ -35,6 +35,10 @@ class EntryWithHintText(Entry):
             self.text.trace_vdelete('w', self.trace_id)
             self.trace_id = None
 
+    def set(self, text):
+        self.delete(0, END)
+        self.insert(0, text)
+
     def insert(self, index, string):
         self.insert_called = True
 
@@ -67,7 +71,7 @@ class EntryWithHintText(Entry):
         self.remove_trace()
         if not self.modified:
             # if the user tried to delete something from the hint, fail
-            if len(self.text.get()) < len(self.hint):
+            if len(self.text.get()) < len(self.hint) and not self.insert_called:
                 self.put_hint()
             else:
                 if not self.insert_called:

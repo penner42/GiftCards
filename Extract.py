@@ -69,20 +69,23 @@ class ExtractFrame(Frame):
             c.set(extractors_list[i].name() in active_sources)
 
         choices = [e.name() for e in extractors_list]
+        self.only_links = []
         for i, e in enumerate(extractors_list):
             self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text=e.name(),
                                                      variable=self.checkboxes[i],
                                                      command=lambda: self.save_sources()))
             self.checkbox_widgets[-1].grid(row=i+2, sticky=N+W)
-            text = Label(left_frame_checkboxes, text='Only', style='Link.TLabel', cursor='hand2')
-            text.bind('<Button-1>', lambda f,i=i: self.check_only(i, all_checked))
-            text.grid(row=i+2, column=2)
+            self.only_links.append(Label(left_frame_checkboxes, text='Only', style='Link.TLabel', cursor='hand2'))
+            self.only_links[-1].bind('<Button-1>', lambda f,i=i: self.check_only(i, all_checked))
+            self.only_links[-1].grid(row=i+2, column=2)
 
         left_frame_checkboxes.grid(row=0)
-        Button(left_frame, text='Extract', style='Extract.TButton',
-               command=self.extract).grid(row=1,sticky=N+E+W+S, pady=1)
-        Button(left_frame, text='Cancel',
-               command=self.cancel).grid(row=2,sticky=N+E+W+S)
+        self.extract_button = Button(left_frame, text='Extract', style='Extract.TButton',command=self.extract)
+        self.extract_button.grid(row=1,sticky=N+E+W+S, pady=1)
+        self.cancel_button = Button(left_frame, text='Cancel', command=self.cancel)
+        self.cancel_button.grid(row=2,sticky=N+E+W+S)
+        self.cancel_button.configure(state=DISABLED)
+
         left_frame.pack(side=LEFT, anchor=N+W, padx=5, pady=5)
         right_pane.pack(side=LEFT, expand=1, fill="both")
         self.do_update()
@@ -90,8 +93,7 @@ class ExtractFrame(Frame):
     def save_sources(self):
         self._settings['Settings']['selected_source'] = ','.join([extractors_list[i].name()
                                                                   for i, c in enumerate(self.checkboxes) if c.get()])
-        with open('giftcards.ini', 'w') as configfile:
-            self._settings.write(configfile)
+        self.winfo_toplevel().save_settings()
 
     def check_only(self, only, all_checked):
         for i, c in enumerate(self.checkboxes):
@@ -115,6 +117,8 @@ class ExtractFrame(Frame):
                     self.output_text.delete(1.0, END)
                     self.output_text.insert(INSERT, line)
                     self.output_text.configure(state=DISABLED)
+                elif line.startswith('EXTRACTIONFINISHED'):
+                    self.restore_gui()
                 else:
                     self.progress_text.config(state='normal')
                     self.progress_text.insert('end-1c', line+'\n')
@@ -138,7 +142,7 @@ class ExtractFrame(Frame):
             if self.browser:
                 self.browser.close()
             self._queue.put_nowait('Extraction canceled.')
-            exit()
+            self.extraction_cleanup()
         except queue.Empty:
             pass
         self._queue.put_nowait(text)
@@ -148,10 +152,27 @@ class ExtractFrame(Frame):
         if self.extract_thread:
             self._kill_queue.put_nowait('DIE')
 
+    def restore_gui(self):
+        for c in self.checkbox_widgets:
+            c.configure(state=NORMAL)
+
+        for l in self.only_links:
+            l.configure(state=NORMAL)
+
+        self.extract_button.configure(state=NORMAL)
+        self.cancel_button.configure(state=DISABLED)
+
+
     def extract(self):
         # disable GUI
         for c in self.checkbox_widgets:
-            c.config(state=DISABLED)
+            c.configure(state=DISABLED)
+
+        for l in self.only_links:
+            l.configure(state=DISABLED)
+
+        self.extract_button.configure(state=DISABLED)
+        self.cancel_button.configure(state=NORMAL)
 
         self.extract_thread = threading.Thread(target=self.extract_real)
         self.extract_thread.start()
@@ -179,7 +200,8 @@ class ExtractFrame(Frame):
         e = [extractors_list[i] for i, c in enumerate(self.checkboxes) if c.get()]
         if len(e) == 0:
             self.update_progress('No sources selected!')
-            return
+            self.extraction_cleanup()
+
         emails = [i for e_list in [x.email() for x in e] for i in e_list]
         days = int(config.get('Settings', 'days'))
         browser = None
@@ -263,7 +285,7 @@ class ExtractFrame(Frame):
                                                  datetime_received, url, imap_username, to_address, phonenum])
         if len(urls) < 1:
             self.update_progress('No cards to extract!')
-            return
+            self.extraction_cleanup()
 
         if browser is None:
             self.update_progress("Launching ChromeDriver...")
@@ -324,3 +346,8 @@ class ExtractFrame(Frame):
                 self.output_cards(cards)
 
         browser.close()
+        self.extraction_cleanup()
+
+    def extraction_cleanup(self):
+        self._queue.put_nowait('EXTRACTIONFINISHED')
+        exit()
