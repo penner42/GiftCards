@@ -54,10 +54,11 @@ class ExtractFrame(Frame):
         self._queue = queue.Queue()
         self._kill_queue = queue.Queue()
         self.checkbox_widgets = []
-        all_checked = BooleanVar()
+        self.all_checked = BooleanVar()
         left_frame_checkboxes = Frame(left_frame, borderwidth=2, relief='groove')
-        self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text='Gift Card Sources', variable=all_checked,
-                                                 command=lambda v=all_checked: self.check_all(v)))
+        self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text='Gift Card Sources',
+                                                 variable=self.all_checked,
+                                                 command=lambda v=self.all_checked: self.check_all(v)))
         self.checkbox_widgets[-1].grid(row=0, columnspan=3, sticky=N+W+E+S)
 
         Separator(left_frame_checkboxes, orient=HORIZONTAL).grid(row=1, columnspan=3, sticky=EW)
@@ -76,8 +77,16 @@ class ExtractFrame(Frame):
                                                      command=lambda: self.save_sources()))
             self.checkbox_widgets[-1].grid(row=i+2, sticky=N+W)
             self.only_links.append(Label(left_frame_checkboxes, text='Only', style='Link.TLabel', cursor='hand2'))
-            self.only_links[-1].bind('<Button-1>', lambda f,i=i: self.check_only(i, all_checked))
+            self.only_links[-1].bind('<Button-1>', lambda f,i=i: self.check_only(i, self.all_checked))
             self.only_links[-1].grid(row=i+2, column=2)
+
+        Separator(left_frame_checkboxes, orient=HORIZONTAL).grid(row=len(extractors_list)+2, columnspan=3, sticky=EW)
+        self.take_screenshots = BooleanVar()
+        self.take_screenshots.set(self._settings['Settings']['screenshots'])
+        self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text='Screenshots',
+                                                 variable=self.take_screenshots,
+                                                 command=lambda v=self.take_screenshots: self.toggle_screenshots(v)))
+        self.checkbox_widgets[-1].grid(columnspan=3, sticky=NSEW)
 
         left_frame_checkboxes.grid(row=0)
         self.extract_button = Button(left_frame, text='Extract', style='Extract.TButton',command=self.extract)
@@ -89,6 +98,10 @@ class ExtractFrame(Frame):
         left_frame.pack(side=LEFT, anchor=N+W, padx=5, pady=5)
         right_pane.pack(side=LEFT, expand=1, fill="both")
         self.do_update()
+
+    def toggle_screenshots(self, value):
+        self._settings['Settings']['screenshots'] = str(value.get())
+        self.winfo_toplevel().save_settings()
 
     def save_sources(self):
         self._settings['Settings']['selected_source'] = ','.join([extractors_list[i].name()

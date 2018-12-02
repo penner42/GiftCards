@@ -18,23 +18,21 @@ class GiftCards(Tk):
         if getattr(sys, 'frozen', False):
             self._path = sys._MEIPASS
 
-        self._settings = configparser.ConfigParser()
+        self._settings = configparser.ConfigParser(allow_no_value=True)
         self._settings.setdefault('Settings',
                                    {'chromedriver_path': '', 'days': 1, 'selected_source': '',
-                                    'hide_chrome_window': 1, 'screenshots': 0})
-        self._settings.setdefault('Email1',
-                                   {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
-                                    'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
-        self._settings.setdefault('Email2',
-                                   {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
-                                    'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
-        self._settings.setdefault('Email3',
-                                   {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
-                                    'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
-        self._settings.setdefault('Email4',
-                                   {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
-                                    'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+                                    'hide_chrome_window': True, 'screenshots': False})
+        #
 
+        # self._settings.setdefault('Email2',
+        #                            {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
+        #                             'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        # self._settings.setdefault('Email3',
+        #                            {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
+        #                             'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
+        # self._settings.setdefault('Email4',
+        #                            {'imap_active': 0,'imap_host': 'imap.gmail.com','imap_port': 993,'imap_ssl': 1,
+        #                             'imap_username': 'username@gmail.com','imap_password': '','phonenum': ''})
         self._settings.read('giftcards.ini')
         self.save_settings()
 
