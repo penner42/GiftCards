@@ -219,7 +219,8 @@ class ExtractFrame(Frame):
         days = int(config.get('Settings', 'days'))
         browser = None
         self.browser = None
-        for section in ['Email1', 'Email2', 'Email3', 'Email4']:
+        for section in (e for e in self._settings.sections() if e.startswith('Email')):
+#        for section in ['Email1', 'Email2', 'Email3', 'Email4']:
             if int(config.get(section, 'imap_active')) == 1:
                 imap_ssl = int(config.get(section, 'imap_ssl')) == 1
                 imap_host = config.get(section, 'imap_host')
@@ -303,7 +304,7 @@ class ExtractFrame(Frame):
         if browser is None:
             self.update_progress("Launching ChromeDriver...")
             chrome_options = webdriver.ChromeOptions()
-            if int(config.get('Settings', 'hide_chrome_window')) == 1:
+            if config.get('Settings', 'hide_chrome_window'):
                 chrome_options.add_argument("--window-position=-10000,0")
             try:
                 profile = config.get('Settings', 'profile')
@@ -349,7 +350,7 @@ class ExtractFrame(Frame):
                 card['datetime_received'] = str(datetime_received)
                 card['url'] = url
                 cards[card['card_store']].append(card)
-                if int(config.get('Settings', 'screenshots')) == 1:
+                if config.get('Settings', 'screenshots'):
                     self.save_screenshot(browser, card['card_code'])
                 # if self.ids.prints.active:
                 #     browser.execute_script('window.print()')

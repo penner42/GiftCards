@@ -152,7 +152,7 @@ class PPDGExtractor(Extractor):
 
     @staticmethod
     def delay():
-        time.sleep(3)
+        time.sleep(5)
 
     @staticmethod
     def complete_challenge(browser, email, phonenum):
