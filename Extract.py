@@ -304,7 +304,7 @@ class ExtractFrame(Frame):
         if browser is None:
             self.update_progress("Launching ChromeDriver...")
             chrome_options = webdriver.ChromeOptions()
-            if config.get('Settings', 'hide_chrome_window'):
+            if config.get('Settings', 'hide_chrome_window') == 'True':
                 chrome_options.add_argument("--window-position=-10000,0")
             try:
                 profile = config.get('Settings', 'profile')
@@ -322,6 +322,7 @@ class ExtractFrame(Frame):
                 # TODO add cancel option
                 while True:
                     try:
+                        browser.get('about:blank')
                         browser.get(url)
                     except TimeoutException:
                         self.update_progress('Page load timed out. Retrying...')
