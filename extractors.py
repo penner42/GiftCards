@@ -458,7 +458,7 @@ class GiftCardMallExtractor(Extractor):
 
     @staticmethod
     def email():
-       return ['gcm-support@giftcardmall.com', 'customerservice@giftcardmall.com']
+       return ['gcm-support@giftcardmall.com', 'customerservice@giftcardmall.com', 'gcm-cust-serv@giftcardmall.com']
 
     @staticmethod
     def fetch_payload(msg):
@@ -470,6 +470,8 @@ class GiftCardMallExtractor(Extractor):
         if len(egc_link) == 0:
 #            egc_link = msg_parsed.findAll("a", text=re.compile("Click to View"))
             egc_link = msg_parsed.findAll("a", text=re.compile("Click to Access"))
+            if len(egc_link) == 0:
+                egc_link = msg_parsed.findAll('a', {'class': 'activation-spot-url'})
 
         urls = []
         if len(egc_link) > 0:
