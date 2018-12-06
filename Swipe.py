@@ -40,7 +40,7 @@ class SwipeFrame(Frame):
             sec1, sec2, sec3 = data.split('^')
             if len(sec1) != 19:
                 t1, t2, t3 = sec3.split('?')
-                if len(t1) == 8:
+                if len(t1) == 8 or len(t1) == 10:
                     card_no = sec1[0:16]
                 else:
                     card_no = sec1[0] + sec3[14:16] + sec1[6:15] + sec3[16:20]

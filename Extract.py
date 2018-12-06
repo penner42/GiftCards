@@ -221,8 +221,8 @@ class ExtractFrame(Frame):
         self.browser = None
         for section in (e for e in self._settings.sections() if e.startswith('Email')):
 #        for section in ['Email1', 'Email2', 'Email3', 'Email4']:
-            if int(config.get(section, 'imap_active')) == 1:
-                imap_ssl = int(config.get(section, 'imap_ssl')) == 1
+            if config.get(section, 'imap_active') == "True":
+                imap_ssl = config.get(section, 'imap_ssl') == "True"
                 imap_host = config.get(section, 'imap_host')
                 imap_port = int(config.get(section, 'imap_port'))
                 imap_username = config.get(section, 'imap_username')
