@@ -336,10 +336,12 @@ class SamsungPayExtractor(Extractor):
             # card store
             card_store = Extractor.find_element(browser,
                 [
+                    {'id': 'retailerName', 'method': browser.find_element_by_name,
+                     'postprocess': lambda s: s.get_attribute('value')},
                     {'id': '//*[@id="main"]/div[1]/div[1]/img',
                      'postprocess': lambda s: s.get_attribute('alt')},
                     {'id': '/html/head/title',
-                     'postprocess': lambda s: s.get_attribute('innerHTML')}
+                     'postprocess': lambda s: s.get_attribute('innerHTML')},
                 ],
                 'Unknown Brand'
             )
@@ -351,13 +353,16 @@ class SamsungPayExtractor(Extractor):
                     {'id': '//*[@id="card-details"]/b[2]'},
                     {'id': '//*[@id="main"]/div[2]/div[1]/h1/span',
                      'postprocess': lambda s: re.search('\$\d+', s.text.strip()).group(0)},
-                    {'id': '//*[@id="main"]/div[1]/div[2]/h2'}
+                    {'id': '//*[@id="main"]/div[1]/div[2]/h2'},
+                    {'id': '//*[@id="egc-amount"]'}
                 ],
                 'Unknown Value')
 
             # Get the card number
             card_code = Extractor.find_element(browser,
                 [
+                    {'id': 'cardNumber', 'method': browser.find_element_by_name,
+                     'postprocess': lambda s: s.get_attribute('value')},
                     {'id': '//*[@id="cardNumber2"]'},
                     {'id': '//*[@id="main"]/div[2]/div/p/span'},
                     {'id': '//*[@id="cardNumber3"]'}
@@ -367,6 +372,8 @@ class SamsungPayExtractor(Extractor):
             # Get the card PIN. Leave blank if we can't find it, as some cards don't have PINs
             card_pin = Extractor.find_element(browser,
                 [
+                    {'id': 'pinNumber', 'method': browser.find_element_by_name,
+                     'postprocess': lambda s: s.get_attribute('value')},
                     {'id': '//*[@id="main"]/div[2]/div[2]/p[2]/span'},
                     {'id': '//*[@id="Span2"]'}
                 ],
