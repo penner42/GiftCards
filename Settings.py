@@ -18,10 +18,21 @@ class SettingsFrame(Frame):
         middle_frame.grid(row=1, sticky=NSEW)
 
         Label(middle_frame, text='Email Addresses').grid(row=0, column=0, padx=5, pady=5, sticky=NW)
+        add_delete_frame = Frame(middle_frame)
+        add_delete_frame.grid(row=0, column=0, sticky=E)
+        self.del_email_button = Button(add_delete_frame, text='-', width=3, command=self.delete_email)
+        self.del_email_button.grid(row=0, column=0, sticky=W)
+        self.add_email_button = Button(add_delete_frame, text='+', width=3, command=self.add_email)
+        self.add_email_button.grid(row=0, column=1, sticky=E)
         self.email_list = Listbox(middle_frame, width=50, exportselection=0)
-        self.email_list.grid(row=1)
+        self.email_list.grid(row=1, sticky=NSEW)
         self.email_list.bind('<<ListboxSelect>>', self.email_clicked)
         self.email_copy = []
+
+        Label(middle_frame,
+              text='* Modified email address. Changes are not saved until Save button is clicked.').grid(
+            row=2, column=0, padx=5, pady=5, sticky=W
+        )
 
         Label(middle_frame, text='Selected email address').grid(row=0, column=1, columnspan=5,
                                                                 padx=5, pady=5, sticky=NW)
@@ -106,6 +117,7 @@ class SettingsFrame(Frame):
         self.email_copy[selected]['modified'] = True
         self.email_copy[selected]['imap_active'] = self.email_enabled_variable.get()
         self.revert_button.configure(state=NORMAL)
+        self.update_email_list()
 
     def ssl_enable_checked(self):
         try:
@@ -116,6 +128,26 @@ class SettingsFrame(Frame):
         self.email_copy[selected]['modified'] = True
         self.email_copy[selected]['imap_ssl'] = self.ssl_enabled_variable.get()
         self.revert_button.configure(state=NORMAL)
+        self.update_email_list()
+
+
+    def delete_email(self):
+        try:
+            selected = self.email_list.curselection()[0]
+        except IndexError:
+            return
+
+        self.email_copy[selected]['deleted'] = True
+        self.update_email_list()
+
+    def add_email(self):
+        new_email = dict()
+        self.set_email_defaults(new_email)
+        new_email['modified'] = True
+        new_email['deleted'] = False
+        new_email['email_address'] = "New Email Address"
+        self.email_copy.append(new_email)
+        self.update_email_list()
 
     def field_changed(self, i):
         try:
@@ -126,6 +158,7 @@ class SettingsFrame(Frame):
         self.email_copy[selected]['modified'] = True
         self.email_copy[selected][self.email_fields[i][1]] = self.email_fields[i][2].get()
         self.revert_button.configure(state=NORMAL)
+        self.update_email_list()
 
     def revert_email(self):
         try:
@@ -134,38 +167,88 @@ class SettingsFrame(Frame):
             return
 
         section = 'Email'+str(selected+1)
-        self.email_copy[selected] = dict(self._settings[section])
-        self.email_copy[selected]['modified'] = False
-        self.email_clicked(None)
+        try:
+            self.email_copy[selected] = dict(self._settings[section])
+            self.email_copy[selected]['modified'] = False
+        except KeyError:
+            # email is newly added, delete it.
+            self.email_copy[selected]['deleted'] = True
+
+        self.update_email_list()
+        # self.email_clicked(None)
 
     def save_settings(self):
         self._settings['Settings']['chromedriver_path'] = self.chromedriver_filename.get()
+        # delete all emails from settings dict
+        for email in (e for e in self._settings.sections() if e.startswith('Email')):
+            del self._settings[email]
+
+        num_deleted = 0
+        # remove deleted emails from copied list
+        for i, e in enumerate(list(self.email_copy)):
+            if e['deleted']:
+                del self.email_copy[i-num_deleted]
+                num_deleted = num_deleted + 1
+
+            # if e['modified']:
+            #     section = 'Email' + str(i+1)
+            #     self._settings[section] = dict(e)
+            #     del self._settings[section]['modified']
+            #     e['modified'] = False
+            #     e['deleted'] = False
+
+        # put remaining emails back in settings, renumbered
         for i, e in enumerate(self.email_copy):
-            if e['modified']:
-                section = 'Email' + str(i+1)
-                self._settings[section] = dict(e)
-                del self._settings[section]['modified']
-                e['modified'] = False
+            section = 'Email' + str(i+1)
+            e['modified'] = False
+            e['deleted'] = False
+            self._settings[section] = dict(e)
+            del self._settings[section]['modified']
+            del self._settings[section]['deleted']
 
         self.winfo_toplevel().save_settings()
         self.revert_button.configure(state=DISABLED)
+        self.update_email_list()
+
+    def update_email_list(self):
+        try:
+            selected = self.email_list.curselection()[0]
+        except IndexError:
+            selected = 0
+
+        self.email_list.delete(0, END)
+        for e in self.email_copy:
+            text=''
+            if e['modified']:
+                text = '* '
+            if e['deleted']:
+                text = text + 'DELETED '
+            text = text + e['email_address']
+            self.email_list.insert(END, text)
+
+        self.email_list.select_set(selected)
+        self.email_list.event_generate('<<ListboxSelect>>')
+
+    def set_email_defaults(self, e):
+        e.setdefault('imap_username', 'username@gmail.com')
+        e.setdefault('email_address', e['imap_username'])
+        e.setdefault('imap_active', 'True')
+        e.setdefault('imap_host', 'imap.gmail.com')
+        e.setdefault('imap_port', '993')
+        e.setdefault('imap_ssl', 'True')
+        e.setdefault('imap_password', '')
+        e.setdefault('phonenum', '')
 
     def load_settings(self):
         self.chromedriver_filename.set(self._settings.get('Settings', 'chromedriver_path'))
         self.email_list.delete(0, END)
         for email in (e for e in self._settings.sections() if e.startswith('Email')):
             section = self._settings[email]
-            section.setdefault('imap_username', 'username@gmail.com')
-            section.setdefault('email_address', section['imap_username'])
-            section.setdefault('imap_active', 'True')
-            section.setdefault('imap_host', 'imap.gmail.com')
-            section.setdefault('imap_port', '993')
-            section.setdefault('imap_ssl', 'True')
-            section.setdefault('imap_password', '')
-            section.setdefault('phonenum', '')
+            self.set_email_defaults(section)
 
             self.email_copy.append(dict(section))
             self.email_copy[-1]['modified'] = False
+            self.email_copy[-1]['deleted'] = False
             self.email_list.insert(END, section['email_address'])
 
     def email_clicked(self, event):
@@ -177,7 +260,7 @@ class SettingsFrame(Frame):
         try:
             selected = self.email_list.curselection()[0]
         except IndexError:
-            return
+            selected = 0
 
         email_copy = self.email_copy[selected]
         # enable all fields
