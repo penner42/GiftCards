@@ -52,6 +52,7 @@ class GiftCards(Tk):
         s.configure('Extract.TButton', foreground='green', background='green')
         s.configure('Sash', sashthickness=10, sashrelief=RAISED, handlesize=100)
         s.configure('Progress.TFrame', minsize=200)
+        s.configure('Disabled.TLabel', foreground='gray')
 
         nb = Notebook(self)
 

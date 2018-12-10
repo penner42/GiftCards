@@ -101,7 +101,19 @@ class SettingsFrame(Frame):
             f[0].configure(textvariable=f[2])
             self.email_fields[i].append(f[2].trace('w', lambda a, b, c, i=i: self.field_changed(i)))
 
+        self.bind('<Visibility>', self.visible)
         self.load_settings()
+
+    def visible(self, Event):
+        try:
+            selected = self.email_list.curselection()[0]
+            return
+        except IndexError:
+            pass
+
+        if len(self.email_list.get(0, END)) > 0:
+            self.email_list.selection_set(0, 0)
+            self.email_clicked(None)
 
     def choose_file(self):
         filename = askopenfilename(title='Select chromedriver.exe', filetypes=[("", "*.exe")])
@@ -130,7 +142,6 @@ class SettingsFrame(Frame):
         self.revert_button.configure(state=NORMAL)
         self.update_email_list()
 
-
     def delete_email(self):
         try:
             selected = self.email_list.curselection()[0]
@@ -138,6 +149,12 @@ class SettingsFrame(Frame):
             return
 
         self.email_copy[selected]['deleted'] = True
+        if selected == len(self.email_list.get(0, END))-1:
+            self.email_list.selection_set(0, 0)
+        else:
+            self.email_list.selection_set(selected+1, selected+2)
+
+        self.revert_button.configure(state=NORMAL)
         self.update_email_list()
 
     def add_email(self):
@@ -170,6 +187,7 @@ class SettingsFrame(Frame):
         try:
             self.email_copy[selected] = dict(self._settings[section])
             self.email_copy[selected]['modified'] = False
+            self.email_copy[selected]['deleted'] = False
         except KeyError:
             # email is newly added, delete it.
             self.email_copy[selected]['deleted'] = True

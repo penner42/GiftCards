@@ -26,12 +26,15 @@ class ExtractFrame(Frame):
         output_frame = Frame(right_pane, style='Progress.TFrame')
         output_frame.columnconfigure(0, weight=1)
         output_frame.rowconfigure(1, weight=1)
-        self.output_label = Label(output_frame, text='Card Output', anchor=W)
-        self.output_label.grid(row=0, sticky=W)
+        copy_frame = Frame(output_frame)
+        Label(copy_frame, text='Card Output', anchor=W).grid(row=0, sticky=W)
+        self.copy_button = Button(copy_frame, text='Copy', command=self.copy_output)
+        self.copy_button.grid(row=0, column=1, sticky=W, padx=5)
+        copy_frame.grid(columnspan=4, sticky=W)
 
         self.output_text = ScrolledText(output_frame, bg='#F0F0F0', height=10, borderwidth=2, relief=GROOVE)
         self.output_text.config(state=DISABLED)
-        self.output_text.grid(row=1, sticky=N+E+W+S)
+        self.output_text.grid(row=1, sticky=N+E+W+S, columnspan=2)
         # right_pane.add(output_frame)
 
         progress_frame = Frame(right_pane, style='Progress.TFrame')
@@ -87,8 +90,16 @@ class ExtractFrame(Frame):
                                                  variable=self.take_screenshots,
                                                  command=lambda v=self.take_screenshots: self.toggle_screenshots(v)))
         self.checkbox_widgets[-1].grid(columnspan=3, sticky=NSEW)
-
+        days_frame = Frame(left_frame_checkboxes)
+        self.days_back_label = Label(days_frame, text='Days Back: ')
+        self.days_back_label.grid(row=0, column=0, sticky=W)
+        self.days_back_string = StringVar()
+        self.days_back_entry = Entry(days_frame, textvariable=self.days_back_string)
+        self.days_back_string.trace('w', lambda a,b,c: self.save_sources())
+        self.days_back_entry.grid(row=0, column=1, sticky=EW, padx=5)
+        self.days_back_entry.insert(0, self._settings['Settings']['days'])
         left_frame_checkboxes.grid(row=0)
+        days_frame.grid(row=len(extractors_list)+4, columnspan=5, sticky=EW)
         self.extract_button = Button(left_frame, text='Extract', style='Extract.TButton',command=self.extract)
         self.extract_button.grid(row=1,sticky=N+E+W+S, pady=1)
         self.cancel_button = Button(left_frame, text='Cancel', command=self.cancel)
@@ -99,6 +110,12 @@ class ExtractFrame(Frame):
         right_pane.pack(side=LEFT, expand=1, fill="both")
         self.do_update()
 
+    def copy_output(self):
+        t = self.winfo_toplevel()
+        t.clipboard_clear()
+        t.clipboard_append(self.output_text.get(1.0, END))
+        t.update()  # now it stays on the clipboard after the window is closed
+
     def toggle_screenshots(self, value):
         self._settings['Settings']['screenshots'] = str(value.get())
         self.winfo_toplevel().save_settings()
@@ -106,6 +123,7 @@ class ExtractFrame(Frame):
     def save_sources(self):
         self._settings['Settings']['selected_source'] = ','.join([extractors_list[i].name()
                                                                   for i, c in enumerate(self.checkboxes) if c.get()])
+        self._settings['Settings']['days'] = self.days_back_string.get()
         self.winfo_toplevel().save_settings()
 
     def check_only(self, only, all_checked):
@@ -174,7 +192,8 @@ class ExtractFrame(Frame):
 
         self.extract_button.configure(state=NORMAL)
         self.cancel_button.configure(state=DISABLED)
-
+        self.days_back_entry.configure(state=NORMAL)
+        self.days_back_label.configure(style='TLabel')
 
     def extract(self):
         # disable GUI
@@ -187,6 +206,9 @@ class ExtractFrame(Frame):
         self.extract_button.configure(state=DISABLED)
         self.cancel_button.configure(state=NORMAL)
 
+        self.days_back_entry.configure(state=DISABLED)
+        self.days_back_label.configure(style='Disabled.TLabel')
+
         self.extract_thread = threading.Thread(target=self.extract_real)
         self.extract_thread.start()
 
@@ -195,11 +217,11 @@ class ExtractFrame(Frame):
         for store in cards:
             # sort by time received
             cards[store] = sorted(cards[store], key=lambda k: k['datetime_received'])
-            csv_output += store + "\r\n"
+            csv_output += store + "\n"
             for c in cards[store]:
-                csv_output += "{},{},{}\r\n".format(
+                csv_output += "{},{},{}\n".format(
                     c['card_amount'], c['card_code'], c['card_pin'])
-            csv_output += "\r\n"
+            csv_output += "\n"
 
         self.update_progress(csv_output)
 
