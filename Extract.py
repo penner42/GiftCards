@@ -28,7 +28,7 @@ class ExtractFrame(Frame):
         output_frame.rowconfigure(1, weight=1)
         copy_frame = Frame(output_frame)
         Label(copy_frame, text='Card Output', anchor=W).grid(row=0, sticky=W)
-        self.copy_button = Button(copy_frame, text='Copy', command=self.copy_output)
+        self.copy_button = Button(copy_frame, text='Copy All', command=self.copy_output)
         self.copy_button.grid(row=0, column=1, sticky=W, padx=5)
         copy_frame.grid(columnspan=4, sticky=W)
 
