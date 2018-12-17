@@ -491,7 +491,13 @@ class GiftCardMallExtractor(Extractor):
     @staticmethod
     def fetch_codes(browser):
         # card store
-        card_store = browser.find_element_by_id('productName').get_attribute('value')
+        card_store = Extractor.find_element(browser,
+                                            [{'id':'productName',
+                                              'method': browser.find_element_by_id,
+                                              'postprocess': lambda s: s.get_attribute('value')
+                                              }],
+                                            'Unknown Brand')
+#        card_store = browser.find_element_by_id('productName').get_attribute('value')
         card_amount = Extractor.find_element(browser,
                                              [
                                                  {'id': '//*[@id="main"]/div[1]/div[1]/h1',
@@ -507,7 +513,12 @@ class GiftCardMallExtractor(Extractor):
                                                'postprocess': lambda s: s.get_attribute('value')}
                                           ],
                                           'Unknown Code')
-        card_pin = browser.find_element_by_id('pinNumber').get_attribute('value')
+        card_pin = Extractor.find_element(browser,
+                                            [{'id':'pinNumber',
+                                              'method': browser.find_element_by_id,
+                                              'postprocess': lambda s: s.get_attribute('value')
+                                              }],
+                                            '')
 
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
