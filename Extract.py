@@ -260,7 +260,12 @@ class ExtractFrame(Frame):
                     mailbox = IMAP4(host=imap_host, port=imap_port)
 
                 # Log in and select the configured folder
-                mailbox.login(imap_username, imap_password)
+                try:
+                    mailbox.login(imap_username, imap_password)
+                except IMAP4.error as e:
+                    self.update_progress('Failed to login to {}: {}'.format(imap_username, e))
+                    continue
+
                 mailbox.select("INBOX")
                 since = (date.today() - timedelta(days - 1)).strftime("%d-%b-%Y")
                 from_list = '(OR ' * (len(emails) - 1) + '(FROM "'+emails[0]+'") ' +\
