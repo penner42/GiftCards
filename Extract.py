@@ -3,6 +3,7 @@ import queue
 from imaplib import IMAP4, IMAP4_SSL
 from datetime import datetime, timedelta, date
 from selenium import webdriver
+from custom_webdriver import custom_webdriver
 from bs4 import BeautifulSoup
 import email, threading, os
 from selenium.common.exceptions import TimeoutException
@@ -52,6 +53,8 @@ class ExtractFrame(Frame):
         output_frame.pack(expand=1, fill="both")
         progress_frame.pack(expand=1, fill="both")
 
+        self.browser = None
+
         # get settings
         self._settings = self.winfo_toplevel().get_settings()
         self._queue = queue.Queue()
@@ -89,6 +92,13 @@ class ExtractFrame(Frame):
         self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text='Screenshots',
                                                  variable=self.take_screenshots,
                                                  command=lambda v=self.take_screenshots: self.toggle_screenshots(v)))
+        self.hide_chrome = BooleanVar()
+        self.hide_chrome.set(self._settings['Settings']['hide_chrome_window'])
+        self.checkbox_widgets.append(Checkbutton(left_frame_checkboxes, text='Hide Chrome Window',
+                                                 variable=self.hide_chrome,
+                                                 command=lambda v=self.hide_chrome: self.toggle_chrome(v)))
+
+        self.checkbox_widgets[-2].grid(columnspan=3, sticky=NSEW)
         self.checkbox_widgets[-1].grid(columnspan=3, sticky=NSEW)
         days_frame = Frame(left_frame_checkboxes)
         self.days_back_label = Label(days_frame, text='Days Back: ')
@@ -99,7 +109,7 @@ class ExtractFrame(Frame):
         self.days_back_entry.grid(row=0, column=1, sticky=EW, padx=5)
         self.days_back_entry.insert(0, self._settings['Settings']['days'])
         left_frame_checkboxes.grid(row=0)
-        days_frame.grid(row=len(extractors_list)+4, columnspan=5, sticky=EW)
+        days_frame.grid(row=len(extractors_list)+5, columnspan=5, sticky=EW)
         self.extract_button = Button(left_frame, text='Extract', style='Extract.TButton',command=self.extract)
         self.extract_button.grid(row=1,sticky=N+E+W+S, pady=1)
         self.cancel_button = Button(left_frame, text='Cancel', command=self.cancel)
@@ -115,6 +125,12 @@ class ExtractFrame(Frame):
         t.clipboard_clear()
         t.clipboard_append(self.output_text.get(1.0, END))
         t.update()  # now it stays on the clipboard after the window is closed
+
+    def toggle_chrome(self, value):
+        self._settings['Settings']['hide_chrome_window'] = str(value.get())
+        self.winfo_toplevel().save_settings()
+        if self.browser:
+            self.browser.toggle()
 
     def toggle_screenshots(self, value):
         self._settings['Settings']['screenshots'] = str(value.get())
@@ -184,7 +200,7 @@ class ExtractFrame(Frame):
             self._kill_queue.put_nowait('DIE')
 
     def restore_gui(self):
-        for c in self.checkbox_widgets:
+        for c in self.checkbox_widgets[0:-1]:
             c.configure(state=NORMAL)
 
         for l in self.only_links:
@@ -197,7 +213,7 @@ class ExtractFrame(Frame):
 
     def extract(self):
         # disable GUI
-        for c in self.checkbox_widgets:
+        for c in self.checkbox_widgets[0:-1]:
             c.configure(state=DISABLED)
 
         for l in self.only_links:
@@ -239,10 +255,8 @@ class ExtractFrame(Frame):
 
         emails = [i for e_list in [x.email() for x in e] for i in e_list]
         days = int(config.get('Settings', 'days'))
-        browser = None
         self.browser = None
         for section in (e for e in self._settings.sections() if e.startswith('Email')):
-#        for section in ['Email1', 'Email2', 'Email3', 'Email4']:
             if config.get(section, 'imap_active') == "True":
                 imap_ssl = config.get(section, 'imap_ssl') == "True"
                 imap_host = config.get(section, 'imap_host')
@@ -314,7 +328,7 @@ class ExtractFrame(Frame):
                             # Parse the message
                             msg_parsed = BeautifulSoup(msg_html, 'html.parser')
                             # Find the "View My Code" link
-                            url = extractor.fetch_url(msg_parsed, browser, imap_username)
+                            url = extractor.fetch_url(msg_parsed, self.browser, imap_username)
 
                             if url is not None:
                                 if isinstance(url, list):
@@ -328,7 +342,7 @@ class ExtractFrame(Frame):
             self.update_progress('No cards to extract!')
             self.extraction_cleanup()
 
-        if browser is None:
+        if self.browser is None:
             self.update_progress("Launching ChromeDriver...")
             chrome_options = webdriver.ChromeOptions()
             if config.get('Settings', 'hide_chrome_window') == 'True':
@@ -339,8 +353,7 @@ class ExtractFrame(Frame):
             except NoOptionError:
                 pass
 
-            browser = webdriver.Chrome(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
-            self.browser = browser # TODO make it all self.browser
+            self.browser = custom_webdriver.CustomWebDriver(config.get('Settings', 'chromedriver_path'), chrome_options=chrome_options)
 
         for msg_id, extractor, datetime_received, url, imap_username, to_address, phonenum in urls:
             self.update_progress("{}: Getting gift card from message id: {}".format(imap_username, msg_id))
@@ -349,21 +362,21 @@ class ExtractFrame(Frame):
                 # TODO add cancel option
                 while True:
                     try:
-                        browser.get('about:blank')
-                        browser.get(url)
+                        self.browser.get('about:blank')
+                        self.browser.get(url)
                     except TimeoutException:
                         self.update_progress('Page load timed out. Retrying...')
                         continue
                     # if page load times out, retry...
-                    if 'ERR_TIMED_OUT' in browser.page_source or 'com.bhn.general.service.error' in browser.page_source:
+                    if 'ERR_TIMED_OUT' in self.browser.page_source or 'com.bhn.general.service.error' in self.browser.page_source:
                         self.update_progress('Page load timed out. Retrying...')
                         time.sleep(1)
                         continue
                     break
 
                 # challenege for various cards
-                extractor.complete_challenge(browser, to_address, phonenum)
-                card = extractor.fetch_codes(browser)
+                extractor.complete_challenge(self.browser, to_address, phonenum)
+                card = extractor.fetch_codes(self.browser)
 
                 if card is None:
                     break
@@ -379,7 +392,7 @@ class ExtractFrame(Frame):
                 card['url'] = url
                 cards[card['card_store']].append(card)
                 if config.get('Settings', 'screenshots'):
-                    self.save_screenshot(browser, card['card_code'])
+                    self.save_screenshot(self.browser, card['card_code'])
                 # if self.ids.prints.active:
                 #     browser.execute_script('window.print()')
                 extractor.delay()
@@ -387,7 +400,8 @@ class ExtractFrame(Frame):
                 # update output window for each new card
                 self.output_cards(cards)
 
-        browser.close()
+        self.browser.close()
+        self.browser = None
         self.extraction_cleanup()
 
     def extraction_cleanup(self):
