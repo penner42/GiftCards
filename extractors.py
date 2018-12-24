@@ -633,5 +633,91 @@ class MyGiftCardsPlusExtractor(Extractor):
         return {'card_store': card_store, 'card_amount': card_amount, 'card_code': card_code, 'card_pin': card_pin}
 
 
+class WalmartExtractor(Extractor):
+    @staticmethod
+    def name():
+        return "Walmart"
+
+    @staticmethod
+    def complete_challenge(browser, email, phonenum):
+        try:
+            browser.find_element_by_id('emailAddress')
+        except NoSuchElementException:
+            return None
+
+        email_field = browser.find_element_by_id('emailAddress')
+        email_field.send_keys(email)
+        wait = WebDriverWait(browser, 15)
+        while email_field.get_attribute("value") != email:
+            try:
+                wait.until(EC.text_to_be_present_in_element_value((By.NAME, "email"), email_field))
+            except TimeoutException:
+                email_field.send_keys(email)
+        email_field.submit()
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "giftListing")))
+
+    @staticmethod
+    def email():
+        return ['WALMARTONLINE@e-deliverygroup.com']
+
+    @staticmethod
+    def fetch_payload(msg):
+        return msg.get_payload(0).get_payload(decode=True)
+
+    @staticmethod
+    def fetch_url(msg_parsed, browser, email):
+        egc_link = msg_parsed.findAll('a', {'class': 'bigLink'})
+        urls = []
+        if len(egc_link) > 0:
+            for u in egc_link:
+                urls.insert(0, u['href'])
+            return urls
+
+    @staticmethod
+    def fetch_codes_real(browser):
+        card_store = ''
+        card_amount = ''
+        card_code = ''
+        card_pin = ''
+        wait = WebDriverWait(browser, 15)
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "productInfo")))
+        try:
+            text = browser.find_element_by_class_name('productInfo').text
+            groups = re.search('.*\n.*\nYour (\$\d+) (.* Gift Card) (.*)', text).groups()
+            card_amount = groups[0]
+            card_store = groups[1]
+            card_code = groups[2]
+            card_pin = ''
+        except NoSuchElementException:
+            pass
+
+        return card_store, card_amount, card_code, card_pin
+
+    @staticmethod
+    def fetch_codes(browser):
+        radio_buttons = browser.find_elements_by_xpath('//*[contains(@id, "redeem-choice")]')
+        next_buttons = [n.get_attribute('href')[40:]
+                        for n in browser.find_elements_by_class_name('web-delivery-next-btn')]
+        # for i, r in enumerate(radio_buttons):
+        #     r.click()
+        #     next_buttons[i].click()
+
+        if len(radio_buttons) == 0:
+            for n in next_buttons:
+                button = browser.find_element_by_css_selector('a[href*="{}"]'.format(n))
+                button.click()
+                try:
+                    frame = browser.find_element_by_id('template-content')
+                    browser.switch_to_frame(frame)
+                    card_store, card_amount, card_code, card_pin = WalmartExtractor.fetch_codes_real(browser)
+                    print('{},{}'.format(card_amount, card_code))
+                    browser.switch_to_default_content()
+                    view_order_button = browser.find_element_by_id('loading-pg-back-btn')
+                    view_order_button.click()
+                except NoSuchElementException:
+                    pass
+
+        return None
+
 extractors_list = [AmazonExtractor, BestBuyExtractor, CashstarExtractor, SamsungPayExtractor, PPDGExtractor,
-                   NeweggExtractor, StaplesExtractor, GiftCardMallExtractor, MyGiftCardsPlusExtractor]
+                   NeweggExtractor, StaplesExtractor, GiftCardMallExtractor, MyGiftCardsPlusExtractor, WalmartExtractor]
