@@ -377,7 +377,8 @@ class SamsungPayExtractor(Extractor):
                     {'id': 'pinNumber', 'method': browser.find_element_by_name,
                      'postprocess': lambda s: s.get_attribute('value')},
                     {'id': '//*[@id="main"]/div[2]/div[2]/p[2]/span'},
-                    {'id': '//*[@id="Span2"]'}
+                    {'id': '//*[@id="Span2"]'},
+                    {'id': '//*[@id="pin-num"]/span'}
                 ],
                 '')
 
